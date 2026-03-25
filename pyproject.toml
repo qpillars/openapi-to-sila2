@@ -1,0 +1,50 @@
+[project]
+name = "openapi-to-sila2"
+version = "0.1.0"
+description = "Generate SiLA2 Feature Definitions and proxy servers from OpenAPI specifications"
+keywords = ["sila2", "openapi", "lab-automation", "code-generation", "grpc"]
+
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development :: Code Generators",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+
+readme = "README.md"
+requires-python = ">=3.10"
+
+dependencies = [
+    "sila2[codegen,cryptography]>=0.13.0",
+    "proto-schema-parser>=1.6.3",
+    "prance>=25.4.8.0",
+    "lxml>=6.0.2",
+    "openapi-spec-validator>=0.7.2",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+    "ruff>=0.14.10",
+    "ty>=0.0.10",
+]
+
+[tool.ruff]
+line-length = 120
+src = ["src/", "examples/", "tests/"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "W"]
+
+[tool.pytest]
+testpaths = ["tests"]
+
+[tool.ty.src]
+# Exclude generated files from type checking
+exclude = ["**/generated/**"]
