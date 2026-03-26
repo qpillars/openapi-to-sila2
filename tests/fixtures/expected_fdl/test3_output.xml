@@ -1,0 +1,63 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Feature xmlns="http://www.sila-standard.org" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    SiLA2Version="1.0" FeatureVersion="1.0" Originator="org.silastandard" Category="generator"
+    xsi:schemaLocation="http://www.sila-standard.org https://gitlab.com/SiLA2/sila_base/raw/master/schema/FeatureDefinition.xsd">
+    <Identifier>NumbersFeature</Identifier>
+    <DisplayName>Numbers Feature</DisplayName>
+    <Description>Operations for updating and storing numbers</Description>
+
+    <DataTypeDefinition>
+        <Identifier>UpdateNumbersParameters</Identifier>
+        <DisplayName>UpdateNumbersParameters Request Parameters</DisplayName>
+        <Description>Request parameters for UpdateNumbersParameters operation.</Description>
+        <DataType>
+            <Structure>
+                <Element>
+                    <Identifier>RequestBody</Identifier>
+                    <DisplayName>Request Body</DisplayName>
+                    <Description>The body of the request.</Description>
+                    <DataType>
+                        <DataTypeIdentifier>Numbers</DataTypeIdentifier>
+                    </DataType>
+                </Element>
+            </Structure>
+        </DataType>
+    </DataTypeDefinition>
+
+    <DataTypeDefinition>
+        <Identifier>Numbers</Identifier>
+        <DisplayName>Numbers</DisplayName>
+        <Description>No description provided.</Description>
+        <DataType>
+            <List>
+                <DataType>
+                    <Basic>String</Basic>
+                </DataType>
+            </List>
+        </DataType>
+    </DataTypeDefinition>
+
+    <DefinedExecutionError>
+        <Identifier>NumbersError</Identifier>
+        <DisplayName>Numbers Error</DisplayName>
+        <Description>Generic error for the feature.</Description>
+    </DefinedExecutionError>
+
+    <Command>
+        <Identifier>UpdateNumbers</Identifier>
+        <DisplayName>Unnamed Command</DisplayName>
+        <Description>No description provided.</Description>
+        <Observable>No</Observable>
+        <Parameter>
+            <Identifier>RequestParameters</Identifier>
+            <DisplayName>Request Parameters</DisplayName>
+            <Description>The parameters and payload of the request.</Description>
+            <DataType>
+                <DataTypeIdentifier>UpdateNumbersParameters</DataTypeIdentifier>
+            </DataType>
+        </Parameter>
+        <DefinedExecutionErrors>
+            <Identifier>NumbersError</Identifier>
+        </DefinedExecutionErrors>
+    </Command>
+</Feature>

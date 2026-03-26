@@ -1,0 +1,63 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "User API",
+        "version": "1.0.0"
+    },
+    "tags": [
+        {
+            "name": "User",
+            "description": "Operations for managing users"
+        }
+    ],
+    "paths": {
+        "/user/{id}": {
+            "delete": {
+                "tags": [
+                    "User"
+                ],
+                "operationId": "deleteUser",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "ID of the user to delete",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DeleteUserRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "User deleted"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "DeleteUserRequest": {
+                "type": "object",
+                "title": "DeleteUserRequest",
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "description": "Reason for deleting the user"
+                    }
+                }
+            }
+        }
+    }
+}

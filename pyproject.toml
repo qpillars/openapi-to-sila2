@@ -34,6 +34,9 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/openapi_to_sila2"]
+include = [
+    "src/openapi_to_sila2/schemas",
+]
 
 [project.scripts]
 openapi-to-sila2 = "openapi_to_sila2.cli:main"
@@ -49,6 +52,7 @@ dev = [
 [tool.ruff]
 line-length = 120
 src = ["src/", "examples/", "tests/"]
+exclude = ["tests/fixtures"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "W"]

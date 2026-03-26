@@ -1,0 +1,41 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Greeting API",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/greet": {
+            "get": {
+                "tags": [
+                    "Greeting"
+                ],
+                "operationId": "getGreeting",
+                "responses": {
+                    "200": {
+                        "description": "Greeting",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Greeting"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Greeting": {
+                "type": "string",
+                "title": "Greeting",
+                "enum": [
+                    "hello",
+                    "goodbye"
+                ]
+            }
+        }
+    }
+}

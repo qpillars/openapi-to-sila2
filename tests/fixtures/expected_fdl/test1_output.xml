@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Feature xmlns="http://www.sila-standard.org" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  SiLA2Version="1.0" FeatureVersion="1.0" Originator="org.silastandard" Category="generator"
+  xsi:schemaLocation="http://www.sila-standard.org https://gitlab.com/SiLA2/sila_base/raw/master/schema/FeatureDefinition.xsd">
+  <Identifier>GreetingFeature</Identifier>
+  <DisplayName>Greeting Feature</DisplayName>
+  <Description>No description provided.</Description>
+
+  <DataTypeDefinition>
+    <Identifier>Greeting</Identifier>
+    <DisplayName>Greeting</DisplayName>
+    <Description>No description provided.</Description>
+    <DataType>
+      <Constrained>
+        <DataType>
+          <Basic>String</Basic>
+        </DataType>
+        <Constraints>
+          <Set>
+            <Value>hello</Value>
+            <Value>goodbye</Value>
+          </Set>
+        </Constraints>
+      </Constrained>
+    </DataType>
+  </DataTypeDefinition>
+
+  <DefinedExecutionError>
+    <Identifier>GreetingError</Identifier>
+    <DisplayName>Greeting Error</DisplayName>
+    <Description>Generic error for the feature.</Description>
+  </DefinedExecutionError>
+
+  <Property>
+    <Identifier>GetGreeting</Identifier>
+    <DisplayName>Unnamed Property</DisplayName>
+    <Description>No description provided.</Description>
+    <Observable>No</Observable>
+    <DataType>
+      <DataTypeIdentifier>Greeting</DataTypeIdentifier>
+    </DataType>
+    <DefinedExecutionErrors>
+      <Identifier>GreetingError</Identifier>
+    </DefinedExecutionErrors>
+  </Property>
+</Feature>

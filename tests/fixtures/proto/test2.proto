@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package sila2.org.silastandard.examples.temperaturefeature.v1;
+
+message DataType_GetTemperatureResponse {
+  message GetTemperatureResponse_Struct {
+    sila2.org.silastandard.Real Temperature = 1;  /* The measured temperature in Celsius. */
+    sila2.org.silastandard.String Unit = 2;        /* The unit of measurement. */
+  }
+  sila2.org.silastandard.examples.temperaturefeature.v1.DataType_GetTemperatureResponse.GetTemperatureResponse_Struct GetTemperatureResponse = 1;  /* Response structure for temperature command. */
+}

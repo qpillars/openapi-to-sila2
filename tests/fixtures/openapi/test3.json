@@ -1,0 +1,56 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Numbers API",
+        "version": "1.0.0"
+    },
+    "tags": [
+        {
+            "name": "Numbers",
+            "description": "Operations for updating and storing numbers"
+        }
+    ],
+    "paths": {
+        "/numbers": {
+            "put": {
+                "tags": [
+                    "Numbers"
+                ],
+                "operationId": "updateNumbers",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Numbers"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Numbers updated"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Numbers": {
+                "type": "array",
+                "title": "Numbers",
+                "items": {
+                    "anyOf": [
+                        {
+                            "type": "integer"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,62 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Object Output API",
+        "version": "1.0.0"
+    },
+    "tags": [
+        {
+            "name": "ObjectOutput",
+            "description": "Operations returning object typed output"
+        }
+    ],
+    "paths": {
+        "/output": {
+            "get": {
+                "tags": [
+                    "ObjectOutput"
+                ],
+                "operationId": "getOutput",
+                "responses": {
+                    "200": {
+                        "description": "Different possible types combined in an object",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ObjectOutput"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ObjectOutput": {
+                "type": "object",
+                "title": "ObjectOutput",
+                "properties": {
+                    "flag": {
+                        "type": "boolean",
+                        "description": "Example boolean value"
+                    },
+                    "value": {
+                        "type": "number",
+                        "description": "Example numeric value"
+                    },
+                    "message": {
+                        "type": "string",
+                        "description": "Example string value"
+                    }
+                },
+                "required": [
+                    "flag",
+                    "value",
+                    "message"
+                ]
+            }
+        }
+    }
+}

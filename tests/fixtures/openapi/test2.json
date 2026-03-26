@@ -1,0 +1,48 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Counter API",
+        "version": "1.0.0"
+    },
+    "tags": [
+        {
+            "name": "Counter",
+            "description": "Operations for setting and managing a counter value"
+        }
+    ],
+    "paths": {
+        "/count": {
+            "post": {
+                "tags": [
+                    "Counter"
+                ],
+                "operationId": "setCount",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Count"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Count updated"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Count": {
+                "title": "Count",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+            }
+        }
+    }
+}

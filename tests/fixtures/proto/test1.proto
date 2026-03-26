@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package sila2.org.silastandard.examples.greetingfeature.v1;
+
+message DataType_GreetingResponse {
+  message GreetingResponse_Struct {
+    sila2.org.silastandard.String Message = 1;  /* The greeting message. */
+    sila2.org.silastandard.String Language = 2;  /* The language of the greeting. */
+  }
+  sila2.org.silastandard.examples.greetingfeature.v1.DataType_GreetingResponse.GreetingResponse_Struct GreetingResponse = 1;  /* Response structure for the Greeting command. */
+}
+
+/* Parameters for Greeting */
+message Greeting_Parameters {
+  sila2.org.silastandard.String Name = 1;  /* The name to include in the greeting. */
+}
