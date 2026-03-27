@@ -1,35 +1,35 @@
 {
     "openapi": "3.1.0",
     "info": {
-        "title": "Counter API",
+        "title": "Temperature Setpoint API",
         "version": "1.0.0"
     },
     "tags": [
         {
-            "name": "Counter",
-            "description": "Operations for setting and managing a counter value"
+            "name": "Temperature",
+            "description": "Operations for setting and managing temperature values"
         }
     ],
     "paths": {
-        "/count": {
+        "/temperature": {
             "post": {
                 "tags": [
-                    "Counter"
+                    "Temperature"
                 ],
-                "operationId": "setCount",
+                "operationId": "setTemperature",
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/Count"
+                                "$ref": "#/components/schemas/TemperatureSetpoint"
                             }
                         }
                     }
                 },
                 "responses": {
                     "200": {
-                        "description": "Count updated"
+                        "description": "Temperature setpoint updated"
                     }
                 }
             }
@@ -37,10 +37,10 @@
     },
     "components": {
         "schemas": {
-            "Count": {
-                "title": "Count",
-                "type": "integer",
-                "minimum": 0,
+            "TemperatureSetpoint": {
+                "title": "TemperatureSetpoint",
+                "type": "number",
+                "minimum": 15,
                 "maximum": 100
             }
         }

@@ -1,28 +1,28 @@
 {
     "openapi": "3.1.0",
     "info": {
-        "title": "User API",
+        "title": "Sample Management API",
         "version": "1.0.0"
     },
     "tags": [
         {
-            "name": "User",
-            "description": "Operations for managing users"
+            "name": "Sample",
+            "description": "Operations for managing and disposing samples"
         }
     ],
     "paths": {
-        "/user/{id}": {
+        "/sample/{sampleId}": {
             "delete": {
                 "tags": [
-                    "User"
+                    "Sample"
                 ],
-                "operationId": "deleteUser",
+                "operationId": "disposeSample",
                 "parameters": [
                     {
-                        "name": "id",
+                        "name": "sampleId",
                         "in": "path",
                         "required": true,
-                        "description": "ID of the user to delete",
+                        "description": "ID of the sample to dispose",
                         "schema": {
                             "type": "integer"
                         }
@@ -33,14 +33,14 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/DeleteUserRequest"
+                                "$ref": "#/components/schemas/DisposalRequest"
                             }
                         }
                     }
                 },
                 "responses": {
                     "204": {
-                        "description": "User deleted"
+                        "description": "Sample disposed"
                     }
                 }
             }
@@ -48,13 +48,13 @@
     },
     "components": {
         "schemas": {
-            "DeleteUserRequest": {
+            "DisposalRequest": {
                 "type": "object",
-                "title": "DeleteUserRequest",
+                "title": "DisposalRequest",
                 "properties": {
-                    "reason": {
+                    "method": {
                         "type": "string",
-                        "description": "Reason for deleting the user"
+                        "description": "Method for disposing the sample"
                     }
                 }
             }

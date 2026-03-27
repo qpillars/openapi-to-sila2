@@ -15,4 +15,4 @@ def test_normalize_openapi(fdl_generator, fixtures_path):
     assert "tags" in specification, "Tags not added to OpenAPI specification"
     tags = specification["tags"]
     assert tags is not None and len(tags) > 0, "Tags list is empty in normalized OpenAPI specification"
-    assert tags[0]["name"] == "Greeting", "Greeting tag not added correctly"
+    assert tags[0]["name"] == "Instrument", "Instrument tag not added correctly"

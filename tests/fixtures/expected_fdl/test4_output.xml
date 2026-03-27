@@ -1,85 +1,83 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<Feature xmlns="http://www.sila-standard.org" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    SiLA2Version="1.0" FeatureVersion="1.0" Originator="org.silastandard" Category="generator"
-    xsi:schemaLocation="http://www.sila-standard.org https://gitlab.com/SiLA2/sila_base/raw/master/schema/FeatureDefinition.xsd">
-    <Identifier>UserFeature</Identifier>
-    <DisplayName>User Feature</DisplayName>
-    <Description>Operations for managing users</Description>
-
-    <DataTypeDefinition>
-        <Identifier>DeleteUserParameters</Identifier>
-        <DisplayName>DeleteUserParameters Request Parameters</DisplayName>
-        <Description>Request parameters for DeleteUserParameters operation.</Description>
-        <DataType>
+<Feature xmlns="http://www.sila-standard.org" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" SiLA2Version="1.0" FeatureVersion="1.0" Originator="org.silastandard" Category="generator" xsi:schemaLocation="http://www.sila-standard.org https://gitlab.com/SiLA2/sila_base/raw/master/schema/FeatureDefinition.xsd">
+  <Identifier>SampleFeature</Identifier>
+  <DisplayName>Sample Feature</DisplayName>
+  <Description>Operations for managing and disposing samples</Description>
+  
+  <DataTypeDefinition>
+    <Identifier>DisposeSampleParameters</Identifier>
+    <DisplayName>DisposeSampleParameters Request Parameters</DisplayName>
+    <Description>Request parameters for DisposeSampleParameters operation.</Description>
+    <DataType>
+      <Structure>
+        <Element>
+          <Identifier>PathParameters</Identifier>
+          <DisplayName>Path Parameters</DisplayName>
+          <Description>The path parameters of the request.</Description>
+          <DataType>
             <Structure>
-                <Element>
-                    <Identifier>PathParameters</Identifier>
-                    <DisplayName>Path Parameters</DisplayName>
-                    <Description>The path parameters of the request.</Description>
-                    <DataType>
-                        <Structure>
-                            <Element>
-                                <Identifier>Id</Identifier>
-                                <DisplayName>Id</DisplayName>
-                                <Description>Id parameter.</Description>
-                                <DataType>
-                                    <Basic>Integer</Basic>
-                                </DataType>
-                            </Element>
-                        </Structure>
-                    </DataType>
-                </Element>
-                <Element>
-                    <Identifier>RequestBody</Identifier>
-                    <DisplayName>Request Body</DisplayName>
-                    <Description>The body of the request.</Description>
-                    <DataType>
-                        <DataTypeIdentifier>DeleteUserRequest</DataTypeIdentifier>
-                    </DataType>
-                </Element>
+              <Element>
+                <Identifier>SampleId</Identifier>
+                <DisplayName>Sampleid</DisplayName>
+                <Description>Sampleid parameter.</Description>
+                <DataType>
+                  <Basic>Integer</Basic>
+                </DataType>
+              </Element>
             </Structure>
-        </DataType>
-    </DataTypeDefinition>
+          </DataType>
+        </Element>
+        <Element>
+          <Identifier>RequestBody</Identifier>
+          <DisplayName>Request Body</DisplayName>
+          <Description>The body of the request.</Description>
+          <DataType>
+            <DataTypeIdentifier>DisposalRequest</DataTypeIdentifier>
+          </DataType>
+        </Element>
+      </Structure>
+    </DataType>
+  </DataTypeDefinition>
+  
+  <DataTypeDefinition>
+    <Identifier>DisposalRequest</Identifier>
+    <DisplayName>DisposalRequest</DisplayName>
+    <Description>No description provided.</Description>
+    <DataType>
+      <Structure>
+        <Element>
+          <Identifier>Method</Identifier>
+          <DisplayName>Method</DisplayName>
+          <Description>Method for disposing the sample</Description>
+          <DataType>
+            <Basic>String</Basic>
+          </DataType>
+        </Element>
+      </Structure>
+    </DataType>
+  </DataTypeDefinition>
+  
+  <DefinedExecutionError>
+    <Identifier>SampleError</Identifier>
+    <DisplayName>Sample Error</DisplayName>
+    <Description>Generic error for the feature.</Description>
+  </DefinedExecutionError>
 
-    <DataTypeDefinition>
-        <Identifier>DeleteUserRequest</Identifier>
-        <DisplayName>DeleteUserRequest</DisplayName>
-        <Description>No description provided.</Description>
-        <DataType>
-            <Structure>
-                <Element>
-                    <Identifier>Reason</Identifier>
-                    <DisplayName>Reason</DisplayName>
-                    <Description>Reason for deleting the user</Description>
-                    <DataType>
-                        <Basic>String</Basic>
-                    </DataType>
-                </Element>
-            </Structure>
-        </DataType>
-    </DataTypeDefinition>
-
-    <DefinedExecutionError>
-        <Identifier>UserError</Identifier>
-        <DisplayName>User Error</DisplayName>
-        <Description>Generic error for the feature.</Description>
-    </DefinedExecutionError>
-
-    <Command>
-        <Identifier>DeleteUser</Identifier>
-        <DisplayName>Unnamed Command</DisplayName>
-        <Description>No description provided.</Description>
-        <Observable>No</Observable>
-        <Parameter>
-            <Identifier>RequestParameters</Identifier>
-            <DisplayName>Request Parameters</DisplayName>
-            <Description>The parameters and payload of the request.</Description>
-            <DataType>
-                <DataTypeIdentifier>DeleteUserParameters</DataTypeIdentifier>
-            </DataType>
-        </Parameter>
-        <DefinedExecutionErrors>
-            <Identifier>UserError</Identifier>
-        </DefinedExecutionErrors>
-    </Command>
+  <Command>
+    <Identifier>DisposeSample</Identifier>
+    <DisplayName>Unnamed Command</DisplayName>
+    <Description>No description provided.</Description>
+    <Observable>No</Observable>
+    <Parameter>
+      <Identifier>RequestParameters</Identifier>
+      <DisplayName>Request Parameters</DisplayName>
+      <Description>The parameters and payload of the request.</Description>
+      <DataType>
+        <DataTypeIdentifier>DisposeSampleParameters</DataTypeIdentifier>
+      </DataType>
+    </Parameter>
+    <DefinedExecutionErrors>
+      <Identifier>SampleError</Identifier>
+    </DefinedExecutionErrors>
+  </Command>
 </Feature>

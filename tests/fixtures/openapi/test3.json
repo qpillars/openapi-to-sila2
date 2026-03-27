@@ -1,35 +1,35 @@
 {
     "openapi": "3.1.0",
     "info": {
-        "title": "Numbers API",
+        "title": "Sample Results API",
         "version": "1.0.0"
     },
     "tags": [
         {
-            "name": "Numbers",
-            "description": "Operations for updating and storing numbers"
+            "name": "Results",
+            "description": "Operations for updating and storing sample analysis results"
         }
     ],
     "paths": {
-        "/numbers": {
+        "/results": {
             "put": {
                 "tags": [
-                    "Numbers"
+                    "Results"
                 ],
-                "operationId": "updateNumbers",
+                "operationId": "updateResults",
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/Numbers"
+                                "$ref": "#/components/schemas/AnalysisResults"
                             }
                         }
                     }
                 },
                 "responses": {
                     "200": {
-                        "description": "Numbers updated"
+                        "description": "Analysis results updated"
                     }
                 }
             }
@@ -37,9 +37,9 @@
     },
     "components": {
         "schemas": {
-            "Numbers": {
+            "AnalysisResults": {
                 "type": "array",
-                "title": "Numbers",
+                "title": "AnalysisResults",
                 "items": {
                     "anyOf": [
                         {

@@ -1,23 +1,23 @@
 {
     "openapi": "3.1.0",
     "info": {
-        "title": "Greeting API",
+        "title": "Instrument Status API",
         "version": "1.0.0"
     },
     "paths": {
-        "/greet": {
+        "/status": {
             "get": {
                 "tags": [
-                    "Greeting"
+                    "Instrument"
                 ],
-                "operationId": "getGreeting",
+                "operationId": "getInstrumentStatus",
                 "responses": {
                     "200": {
-                        "description": "Greeting",
+                        "description": "Instrument Status",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Greeting"
+                                    "$ref": "#/components/schemas/InstrumentStatus"
                                 }
                             }
                         }
@@ -28,12 +28,12 @@
     },
     "components": {
         "schemas": {
-            "Greeting": {
+            "InstrumentStatus": {
                 "type": "string",
-                "title": "Greeting",
+                "title": "InstrumentStatus",
                 "enum": [
-                    "hello",
-                    "goodbye"
+                    "ready",
+                    "measuring"
                 ]
             }
         }

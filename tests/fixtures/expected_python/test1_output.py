@@ -1,6 +1,12 @@
 from typing import NamedTuple
 
+class StartCalibrationResponse(NamedTuple):
+    CalibrationId: str
+    Temperature: float
 
-class GreetingResponse(NamedTuple):
-    Message: str
-    Language: str
+class StartCalibrationRequest(NamedTuple):
+    DeviceName: str
+    TargetTemperature: float
+
+class StartCalibrationParameters(NamedTuple):
+    RequestBody: StartCalibrationRequest

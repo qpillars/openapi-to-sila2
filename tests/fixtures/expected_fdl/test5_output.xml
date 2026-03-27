@@ -1,61 +1,59 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<Feature xmlns="http://www.sila-standard.org" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    SiLA2Version="1.0" FeatureVersion="1.0" Originator="org.silastandard" Category="generator"
-    xsi:schemaLocation="http://www.sila-standard.org https://gitlab.com/SiLA2/sila_base/raw/master/schema/FeatureDefinition.xsd">
-    <Identifier>ObjectOutputFeature</Identifier>
-    <DisplayName>ObjectOutput Feature</DisplayName>
-    <Description>Operations returning object typed output</Description>
+<Feature xmlns="http://www.sila-standard.org" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" SiLA2Version="1.0" FeatureVersion="1.0" Originator="org.silastandard" Category="generator" xsi:schemaLocation="http://www.sila-standard.org https://gitlab.com/SiLA2/sila_base/raw/master/schema/FeatureDefinition.xsd">
+  <Identifier>EquipmentFeature</Identifier>
+  <DisplayName>Equipment Feature</DisplayName>
+  <Description>Operations returning equipment status and diagnostics</Description>
 
-    <DataTypeDefinition>
-        <Identifier>ObjectOutput</Identifier>
-        <DisplayName>ObjectOutput</DisplayName>
-        <Description>No description provided.</Description>
-        <DataType>
-            <Structure>
-                <Element>
-                    <Identifier>Flag</Identifier>
-                    <DisplayName>Flag</DisplayName>
-                    <Description>Example boolean value</Description>
-                    <DataType>
-                        <Basic>Boolean</Basic>
-                    </DataType>
-                </Element>
-                <Element>
-                    <Identifier>Value</Identifier>
-                    <DisplayName>Value</DisplayName>
-                    <Description>Example numeric value</Description>
-                    <DataType>
-                        <Basic>Real</Basic>
-                    </DataType>
-                </Element>
-                <Element>
-                    <Identifier>Message</Identifier>
-                    <DisplayName>Message</DisplayName>
-                    <Description>Example string value</Description>
-                    <DataType>
-                        <Basic>String</Basic>
-                    </DataType>
-                </Element>
-            </Structure>
-        </DataType>
-    </DataTypeDefinition>
-
-    <DefinedExecutionError>
-        <Identifier>ObjectOutputError</Identifier>
-        <DisplayName>ObjectOutput Error</DisplayName>
-        <Description>Generic error for the feature.</Description>
-    </DefinedExecutionError>
-
-    <Property>
-        <Identifier>GetOutput</Identifier>
-        <DisplayName>Unnamed Property</DisplayName>
-        <Description>No description provided.</Description>
-        <Observable>No</Observable>
-        <DataType>
-            <DataTypeIdentifier>ObjectOutput</DataTypeIdentifier>
-        </DataType>
-        <DefinedExecutionErrors>
-            <Identifier>ObjectOutputError</Identifier>
-        </DefinedExecutionErrors>
-    </Property>
+  <DataTypeDefinition>
+    <Identifier>EquipmentDiagnostics</Identifier>
+    <DisplayName>EquipmentDiagnostics</DisplayName>
+    <Description>No description provided.</Description>
+    <DataType>
+      <Structure>
+        <Element>
+          <Identifier>Operational</Identifier>
+          <DisplayName>Operational</DisplayName>
+          <Description>Equipment operational status</Description>
+          <DataType>
+            <Basic>Boolean</Basic>
+          </DataType>
+        </Element>
+        <Element>
+          <Identifier>Temperature</Identifier>
+          <DisplayName>Temperature</DisplayName>
+          <Description>Current equipment temperature in Celsius</Description>
+          <DataType>
+            <Basic>Real</Basic>
+          </DataType>
+        </Element>
+        <Element>
+          <Identifier>SerialNumber</Identifier>
+          <DisplayName>Serialnumber</DisplayName>
+          <Description>Equipment serial number</Description>
+          <DataType>
+            <Basic>String</Basic>
+          </DataType>
+        </Element>
+      </Structure>
+    </DataType>
+  </DataTypeDefinition>
+  
+  <DefinedExecutionError>
+    <Identifier>EquipmentError</Identifier>
+    <DisplayName>Equipment Error</DisplayName>
+    <Description>Generic error for the feature.</Description>
+  </DefinedExecutionError>
+  
+  <Property>
+    <Identifier>GetDiagnostics</Identifier>
+    <DisplayName>Unnamed Property</DisplayName>
+    <Description>No description provided.</Description>
+    <Observable>No</Observable>
+    <DataType>
+      <DataTypeIdentifier>EquipmentDiagnostics</DataTypeIdentifier>
+    </DataType>
+    <DefinedExecutionErrors>
+      <Identifier>EquipmentError</Identifier>
+    </DefinedExecutionErrors>
+  </Property>
 </Feature>

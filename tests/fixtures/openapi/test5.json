@@ -1,29 +1,29 @@
 {
     "openapi": "3.1.0",
     "info": {
-        "title": "Object Output API",
+        "title": "Equipment Status API",
         "version": "1.0.0"
     },
     "tags": [
         {
-            "name": "ObjectOutput",
-            "description": "Operations returning object typed output"
+            "name": "Equipment",
+            "description": "Operations returning equipment status and diagnostics"
         }
     ],
     "paths": {
-        "/output": {
+        "/diagnostics": {
             "get": {
                 "tags": [
-                    "ObjectOutput"
+                    "Equipment"
                 ],
-                "operationId": "getOutput",
+                "operationId": "getDiagnostics",
                 "responses": {
                     "200": {
-                        "description": "Different possible types combined in an object",
+                        "description": "Equipment diagnostics and status information",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ObjectOutput"
+                                    "$ref": "#/components/schemas/EquipmentDiagnostics"
                                 }
                             }
                         }
@@ -34,27 +34,27 @@
     },
     "components": {
         "schemas": {
-            "ObjectOutput": {
+            "EquipmentDiagnostics": {
                 "type": "object",
-                "title": "ObjectOutput",
+                "title": "EquipmentDiagnostics",
                 "properties": {
-                    "flag": {
+                    "operational": {
                         "type": "boolean",
-                        "description": "Example boolean value"
+                        "description": "Equipment operational status"
                     },
-                    "value": {
+                    "temperature": {
                         "type": "number",
-                        "description": "Example numeric value"
+                        "description": "Current equipment temperature in Celsius"
                     },
-                    "message": {
+                    "serialNumber": {
                         "type": "string",
-                        "description": "Example string value"
+                        "description": "Equipment serial number"
                     }
                 },
                 "required": [
-                    "flag",
-                    "value",
-                    "message"
+                    "operational",
+                    "temperature",
+                    "serialNumber"
                 ]
             }
         }
