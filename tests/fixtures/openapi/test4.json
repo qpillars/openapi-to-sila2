@@ -1,0 +1,63 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Sample Management API",
+        "version": "1.0.0"
+    },
+    "tags": [
+        {
+            "name": "Sample",
+            "description": "Operations for managing and disposing samples"
+        }
+    ],
+    "paths": {
+        "/sample/{sampleId}": {
+            "delete": {
+                "tags": [
+                    "Sample"
+                ],
+                "operationId": "disposeSample",
+                "parameters": [
+                    {
+                        "name": "sampleId",
+                        "in": "path",
+                        "required": true,
+                        "description": "ID of the sample to dispose",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DisposalRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Sample disposed"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "DisposalRequest": {
+                "type": "object",
+                "title": "DisposalRequest",
+                "properties": {
+                    "method": {
+                        "type": "string",
+                        "description": "Method for disposing the sample"
+                    }
+                }
+            }
+        }
+    }
+}

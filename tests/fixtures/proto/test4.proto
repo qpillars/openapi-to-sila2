@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package sila2.org.silastandard.examples.measurementfeature.v1;
+
+/* Response for StartMeasurement */
+message DataType_StartMeasurementResponse {
+  message StartMeasurementResponse_Struct {
+    sila2.org.silastandard.String MeasurementId = 1;  /* Unique ID of the measurement session. */
+    sila2.org.silastandard.Real Value = 2;           /* A single measurement value. */
+  }
+  repeated sila2.org.silastandard.examples.measurementfeature.v1.DataType_StartMeasurementResponse.StartMeasurementResponse_Struct StartMeasurementResponse = 1;  /* Response contains a list of measurement items. */
+}
+
+/* Wrapper message for the response (optional SiLA2 style) */
+message StartMeasurement_Responses {
+  sila2.org.silastandard.examples.measurementfeature.v1.DataType_StartMeasurementResponse StartMeasurementResponseList = 1;  /* Contains all StartMeasurement response items. */
+}
+
+/* Parameters for StartMeasurement (SiLA2 nested style) */
+message DataType_StartMeasurementParameters {
+  message StartMeasurementParameters_Struct {
+    sila2.org.silastandard.examples.measurementfeature.v1.DataType_StartMeasurementRequest RequestBody = 1;  /* The body of the StartMeasurement request. */
+  }
+  sila2.org.silastandard.examples.measurementfeature.v1.DataType_StartMeasurementParameters.StartMeasurementParameters_Struct StartMeasurementParameters = 1;  /* Request parameters for StartMeasurement operation. */
+}
+
+/* Request body for StartMeasurement */
+message DataType_StartMeasurementRequest {
+  message StartMeasurementRequest_Struct {
+    sila2.org.silastandard.String SampleName = 1;  /* Name of the sample being measured. */
+  }
+  sila2.org.silastandard.examples.measurementfeature.v1.DataType_StartMeasurementRequest.StartMeasurementRequest_Struct StartMeasurementRequest = 1;  /* Structure for StartMeasurement request body. */
+}

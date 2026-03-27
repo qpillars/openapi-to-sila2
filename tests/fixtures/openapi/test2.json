@@ -1,0 +1,48 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Temperature Setpoint API",
+        "version": "1.0.0"
+    },
+    "tags": [
+        {
+            "name": "Temperature",
+            "description": "Operations for setting and managing temperature values"
+        }
+    ],
+    "paths": {
+        "/temperature": {
+            "post": {
+                "tags": [
+                    "Temperature"
+                ],
+                "operationId": "setTemperature",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TemperatureSetpoint"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Temperature setpoint updated"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "TemperatureSetpoint": {
+                "title": "TemperatureSetpoint",
+                "type": "number",
+                "minimum": 15,
+                "maximum": 100
+            }
+        }
+    }
+}

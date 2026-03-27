@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package sila2.org.silastandard.examples.deviceinfofeature.v1;
+
+/* Response for DeviceInfo */
+message DataType_DeviceInfoResponse {
+  message DeviceInfoResponse_Struct {
+    sila2.org.silastandard.String Name = 1;         /* The name of the device. */
+    sila2.org.silastandard.String Manufacturer = 2; /* Manufacturer name. */
+    sila2.org.silastandard.String Version = 3;      /* Firmware version. */
+  }
+  sila2.org.silastandard.examples.deviceinfofeature.v1.DataType_DeviceInfoResponse.DeviceInfoResponse_Struct DeviceInfoResponse = 1;  /* Response structure for the device info command. */
+}
+
+/* Parameters for DeviceInfo (refactored in SiLA2 nested style) */
+message DataType_DeviceInfoParameters {
+  message DeviceInfoParameters_Struct {
+    sila2.org.silastandard.examples.deviceinfofeature.v1.DataType_DeviceInfoRequest RequestBody = 1;  /* The body of the DeviceInfo request. */
+  }
+  sila2.org.silastandard.examples.deviceinfofeature.v1.DataType_DeviceInfoParameters.DeviceInfoParameters_Struct DeviceInfoParameters = 1;  /* Request parameters for DeviceInfo operation. */
+}
+
+/* Request body for DeviceInfo */
+message DataType_DeviceInfoRequest {
+  message DeviceInfoRequest_Struct {
+    sila2.org.silastandard.String RequestId = 1;  /* Optional request ID. */
+  }
+  sila2.org.silastandard.examples.deviceinfofeature.v1.DataType_DeviceInfoRequest.DeviceInfoRequest_Struct DeviceInfoRequest = 1;  /* Structure for DeviceInfo request body. */
+}

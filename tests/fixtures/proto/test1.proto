@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package sila2.org.silastandard.examples.calibrationfeature.v1;
+
+/* Response for StartCalibration */
+message DataType_StartCalibrationResponse {
+  message StartCalibrationResponse_Struct {
+    sila2.org.silastandard.String CalibrationId = 1;  /* Unique ID of the calibration session. */
+    sila2.org.silastandard.Real Temperature = 2;       /* The calibration temperature in Celsius. */
+  }
+  sila2.org.silastandard.examples.calibrationfeature.v1.DataType_StartCalibrationResponse.StartCalibrationResponse_Struct StartCalibrationResponse = 1;  /* Response structure for the StartCalibration command. */
+}
+
+/* Parameters for StartCalibration */
+message DataType_StartCalibrationParameters {
+  message StartCalibrationParameters_Struct {
+    sila2.org.silastandard.examples.calibrationfeature.v1.DataType_StartCalibrationRequest RequestBody = 1;  /* The body of the StartCalibration request. */
+  }
+  sila2.org.silastandard.examples.calibrationfeature.v1.DataType_StartCalibrationParameters.StartCalibrationParameters_Struct StartCalibrationParameters = 1;  /* Request parameters for StartCalibration operation. */
+}
+
+/* Request body for StartCalibration */
+message DataType_StartCalibrationRequest {
+  message StartCalibrationRequest_Struct {
+    sila2.org.silastandard.String DeviceName = 1;     /* Name of the device to calibrate. */
+    sila2.org.silastandard.Real TargetTemperature = 2; /* Target calibration temperature. */
+  }
+  sila2.org.silastandard.examples.calibrationfeature.v1.DataType_StartCalibrationRequest.StartCalibrationRequest_Struct StartCalibrationRequest = 1;  /* Structure for StartCalibration request body. */
+}

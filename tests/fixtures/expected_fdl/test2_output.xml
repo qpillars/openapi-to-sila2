@@ -1,0 +1,65 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Feature xmlns="http://www.sila-standard.org" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" SiLA2Version="1.0" FeatureVersion="1.0" Originator="org.silastandard" Category="generator" xsi:schemaLocation="http://www.sila-standard.org https://gitlab.com/SiLA2/sila_base/raw/master/schema/FeatureDefinition.xsd">
+  <Identifier>TemperatureFeature</Identifier>
+  <DisplayName>Temperature Feature</DisplayName>
+  <Description>Operations for setting and managing temperature values</Description>
+
+  <DataTypeDefinition>
+    <Identifier>SetTemperatureParameters</Identifier>
+    <DisplayName>SetTemperatureParameters Request Parameters</DisplayName>
+    <Description>Request parameters for SetTemperatureParameters operation.</Description>
+    <DataType>
+      <Structure>
+        <Element>
+          <Identifier>RequestBody</Identifier>
+          <DisplayName>Request Body</DisplayName>
+          <Description>The body of the request.</Description>
+          <DataType>
+            <DataTypeIdentifier>TemperatureSetpoint</DataTypeIdentifier>
+          </DataType>
+        </Element>
+      </Structure>
+    </DataType>
+  </DataTypeDefinition>
+
+  <DataTypeDefinition>
+    <Identifier>TemperatureSetpoint</Identifier>
+    <DisplayName>TemperatureSetpoint</DisplayName>
+    <Description>No description provided.</Description>
+    <DataType>
+      <Constrained>
+        <DataType>
+          <Basic>Real</Basic>
+        </DataType>
+        <Constraints>
+          <MinimalInclusive>15</MinimalInclusive>
+          <MaximalInclusive>100</MaximalInclusive>
+        </Constraints>
+      </Constrained>
+    </DataType>
+  </DataTypeDefinition>
+
+  <DefinedExecutionError>
+    <Identifier>TemperatureError</Identifier>
+    <DisplayName>Temperature Error</DisplayName>
+    <Description>Generic error for the feature.</Description>
+  </DefinedExecutionError>
+  
+  <Command>
+    <Identifier>SetTemperature</Identifier>
+    <DisplayName>Unnamed Command</DisplayName>
+    <Description>No description provided.</Description>
+    <Observable>No</Observable>
+    <Parameter>
+      <Identifier>RequestParameters</Identifier>
+      <DisplayName>Request Parameters</DisplayName>
+      <Description>The parameters and payload of the request.</Description>
+      <DataType>
+        <DataTypeIdentifier>SetTemperatureParameters</DataTypeIdentifier>
+      </DataType>
+    </Parameter>
+    <DefinedExecutionErrors>
+      <Identifier>TemperatureError</Identifier>
+    </DefinedExecutionErrors>
+  </Command>
+</Feature>

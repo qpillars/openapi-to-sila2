@@ -1,0 +1,62 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Equipment Status API",
+        "version": "1.0.0"
+    },
+    "tags": [
+        {
+            "name": "Equipment",
+            "description": "Operations returning equipment status and diagnostics"
+        }
+    ],
+    "paths": {
+        "/diagnostics": {
+            "get": {
+                "tags": [
+                    "Equipment"
+                ],
+                "operationId": "getDiagnostics",
+                "responses": {
+                    "200": {
+                        "description": "Equipment diagnostics and status information",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EquipmentDiagnostics"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "EquipmentDiagnostics": {
+                "type": "object",
+                "title": "EquipmentDiagnostics",
+                "properties": {
+                    "operational": {
+                        "type": "boolean",
+                        "description": "Equipment operational status"
+                    },
+                    "temperature": {
+                        "type": "number",
+                        "description": "Current equipment temperature in Celsius"
+                    },
+                    "serialNumber": {
+                        "type": "string",
+                        "description": "Equipment serial number"
+                    }
+                },
+                "required": [
+                    "operational",
+                    "temperature",
+                    "serialNumber"
+                ]
+            }
+        }
+    }
+}

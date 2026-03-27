@@ -1,0 +1,56 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Sample Results API",
+        "version": "1.0.0"
+    },
+    "tags": [
+        {
+            "name": "Results",
+            "description": "Operations for updating and storing sample analysis results"
+        }
+    ],
+    "paths": {
+        "/results": {
+            "put": {
+                "tags": [
+                    "Results"
+                ],
+                "operationId": "updateResults",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AnalysisResults"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Analysis results updated"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "AnalysisResults": {
+                "type": "array",
+                "title": "AnalysisResults",
+                "items": {
+                    "anyOf": [
+                        {
+                            "type": "integer"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}

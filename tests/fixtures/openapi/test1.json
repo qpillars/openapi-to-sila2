@@ -1,0 +1,41 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Instrument Status API",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/status": {
+            "get": {
+                "tags": [
+                    "Instrument"
+                ],
+                "operationId": "getInstrumentStatus",
+                "responses": {
+                    "200": {
+                        "description": "Instrument Status",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InstrumentStatus"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "InstrumentStatus": {
+                "type": "string",
+                "title": "InstrumentStatus",
+                "enum": [
+                    "ready",
+                    "measuring"
+                ]
+            }
+        }
+    }
+}
