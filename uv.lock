@@ -951,6 +951,7 @@ dependencies = [
     { name = "prance" },
     { name = "proto-schema-parser" },
     { name = "sila2", extra = ["codegen", "cryptography"] },
+    { name = "typer" },
 ]
 
 [package.dev-dependencies]
@@ -968,6 +969,7 @@ requires-dist = [
     { name = "prance", specifier = ">=25.4.8.0" },
     { name = "proto-schema-parser", specifier = ">=1.6.3" },
     { name = "sila2", extras = ["codegen", "cryptography"], specifier = ">=0.13.0" },
+    { name = "typer", specifier = ">=0.24.1" },
 ]
 
 [package.metadata.requires-dev]
