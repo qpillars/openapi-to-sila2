@@ -1,0 +1,11 @@
+[project]
+name = "mock-api"
+version = "0.1.0"
+description = "Mock laboratory API for SiLA2 conversion examples"
+requires-python = ">=3.10"
+
+dependencies = [
+    "fastapi>=0.115.12",
+    "uvicorn>=0.34.2",
+    "pyjwt>=2.10.1",
+]
