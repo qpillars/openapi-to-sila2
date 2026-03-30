@@ -31,6 +31,7 @@ class Sila2ClassGenerator:
         """
         Parse a proto file and return generated Python source as a string.
         """
+
         self.generated_classes = set()
         self.needs_list_import = False
 
