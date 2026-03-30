@@ -1,12 +1,15 @@
 """Routes for the mock API"""
-from . import _login, _instruments, _observable
+
 import typing as tp
+
 from fastapi import APIRouter
+
+from . import _instruments, _login, _observable
 
 
 def all_routers() -> tp.Iterable[APIRouter]:
     """Get all route routers for registration
-    
+
     Returns:
         Iterable of APIRouter instances
     """

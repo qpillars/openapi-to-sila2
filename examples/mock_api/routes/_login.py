@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends
-from services._login_service import LoginService
 from schemas.types import LoginRequest, LoginResponse
-
+from services._login_service import LoginService
 
 router = APIRouter(prefix="/login", tags=["Authentication"])
 
@@ -13,15 +12,13 @@ def get_login_service() -> LoginService:
 
 
 @router.post("/", response_model=LoginResponse)
-def login(
-    request: LoginRequest, service: LoginService = Depends(get_login_service)
-) -> LoginResponse:
+def login(request: LoginRequest, service: LoginService = Depends(get_login_service)) -> LoginResponse:
     """Authenticate and receive JWT token
-    
+
     Args:
         request: Login credentials
         service: Login service instance
-        
+
     Returns:
         JWT access token
     """

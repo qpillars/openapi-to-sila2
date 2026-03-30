@@ -1,16 +1,17 @@
 """Schema models for the mock API"""
+
 from .instruments import (
     Instrument,
-    InstrumentCreate,
     InstrumentBase,
-    InstrumentType,
+    InstrumentCreate,
     InstrumentState,
+    InstrumentType,
 )
 from .types import (
-    MeasurementReading,
-    StreamEvent,
     LoginRequest,
     LoginResponse,
+    MeasurementReading,
+    StreamEvent,
 )
 
 __all__ = [

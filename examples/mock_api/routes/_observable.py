@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Depends
-from fastapi.responses import StreamingResponse
-from services._instrument_service import InstrumentService
-from schemas.types import MeasurementReading
 import json
+import random
 import time
 from datetime import datetime, timezone
-import random
+
+from fastapi import APIRouter, Depends
+from fastapi.responses import StreamingResponse
+from schemas.types import MeasurementReading
+from services._instrument_service import InstrumentService
 
 router = APIRouter(prefix="/observable", tags=["Observable"])
 
@@ -20,10 +21,10 @@ def event_stream(
     service: InstrumentService = Depends(get_instrument_service),
 ):
     """Generate global streaming events from all instruments
-    
+
     Args:
         service: Instrument service instance
-        
+
     Yields:
         JSON-encoded measurement readings
     """
@@ -32,10 +33,10 @@ def event_stream(
         index = 0
         while True:
             instruments = service.get_available_instruments()
-            
+
             if instruments:
                 instrument = random.choice(instruments)
-                
+
                 if instrument.type.value == "balance":
                     value = round(random.uniform(0.1, 500.0), 2)
                     unit = "g"
@@ -48,7 +49,7 @@ def event_stream(
                 else:
                     value = round(random.uniform(0.1, 100.0), 1)
                     unit = "μm"
-                
+
                 reading = MeasurementReading(
                     instrument_id=instrument.id,
                     instrument_name=instrument.name,
@@ -85,12 +86,12 @@ def stream_measurements(
     service: InstrumentService = Depends(get_instrument_service),
 ):
     """Stream real-time measurements from all instruments
-    
+
     Server-Sent Events stream of latest measurements across all instruments.
-    
+
     Args:
         service: Instrument service instance
-        
+
     Returns:
         StreamingResponse with JSON-encoded measurements
     """

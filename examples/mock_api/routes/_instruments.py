@@ -1,4 +1,3 @@
-from typing import List
 from fastapi import APIRouter, Depends, status
 from schemas.instruments import (
     Instrument,
@@ -22,12 +21,12 @@ def get_login_service() -> LoginService:
     return LoginService()
 
 
-@router.get("/", response_model=List[Instrument])
+@router.get("/", response_model=list[Instrument])
 def list_instruments(
     service: InstrumentService = Depends(get_instrument_service),
-) -> List[Instrument]:
+) -> list[Instrument]:
     """Get all registered laboratory instruments
-    
+
     Returns:
         List of available instruments
     """
@@ -41,10 +40,10 @@ def get_instrument_status(
     service: InstrumentService = Depends(get_instrument_service),
 ) -> Instrument:
     """Get detailed status of an instrument
-    
+
     Args:
         instrument_id: ID of the instrument
-        
+
     Returns:
         Instrument status with state and metadata
     """
@@ -59,7 +58,7 @@ def register_new_instrument(
     _: dict = Depends(get_login_service().require_role("admin")),
 ) -> Instrument:
     """Register a new laboratory instrument (admin only)
-    
+
     Args:
         payload: Instrument details
         service: Instrument service instance
@@ -78,9 +77,9 @@ def calibrate_instrument(
     _: dict = Depends(get_login_service().require_role("admin")),
 ) -> Instrument:
     """Calibrate an instrument (admin only)
-    
+
     Updates calibration timestamp and schedules next maintenance.
-    
+
     Args:
         instrument_id: ID of instrument to calibrate
         service: Instrument service instance
@@ -92,21 +91,20 @@ def calibrate_instrument(
     return service.calibrate_instrument(instrument_id)
 
 
-@router.put("/{instrument_id}/retire", response_model=Instrument)
+@router.delete("/{instrument_id}", response_model=int, status_code=status.HTTP_200_OK)
 def retire_instrument(
     instrument_id: int,
     service: InstrumentService = Depends(get_instrument_service),
     _: dict = Depends(get_login_service().require_role("admin")),
-) -> Instrument:
-    """Retire an instrument from service (admin only)
-    
+) -> int:
+    """Retire/delete an instrument from service (admin only)
+
     Args:
         instrument_id: ID of instrument to retire
         service: Instrument service instance
         _: Login context
     Returns:
-        Updated instrument with maintenance state
+        Retired instrument ID
     """
-    
-    service.retire_instrument(instrument_id)
-    return service.get_instrument_status(instrument_id)
+
+    return service.retire_instrument(instrument_id)

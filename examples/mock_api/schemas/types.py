@@ -1,6 +1,6 @@
-from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Optional
+
+from pydantic import BaseModel, Field
 
 
 class LoginRequest(BaseModel):
@@ -23,18 +23,9 @@ class MeasurementReading(BaseModel):
     instrument_name: str = Field(..., description="Source instrument name")
     value: float = Field(..., description="Current measurement value")
     unit: str = Field(..., description="Unit of measurement")
-    timestamp: datetime = Field(
-        ...,
-        description="Reading timestamp"
-    )
-    status: str = Field(
-        default="ok",
-        description="Measurement status (ok, warning, error)"
-    )
-    metadata: Optional[dict] = Field(
-        None,
-        description="Optional additional data"
-    )
+    timestamp: datetime = Field(..., description="Reading timestamp")
+    status: str = Field(default="ok", description="Measurement status (ok, warning, error)")
+    metadata: dict | None = Field(None, description="Optional additional data")
 
 
 class StreamEvent(BaseModel):

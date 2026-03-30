@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from routes import all_routers
 
-
 app = FastAPI(
     title="Mock Laboratory API",
     description="Mock laboratory instrument and measurement API for SiLA2 conversion examples",
@@ -16,7 +15,7 @@ for router in all_routers():
 @app.get("/health")
 def health_check():
     """Health check endpoint
-    
+
     Returns:
         Status information
     """

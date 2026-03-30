@@ -1,11 +1,23 @@
-from typing import List
 from datetime import datetime, timedelta, timezone
+from typing import TypedDict
+
 from fastapi import HTTPException
 from schemas.instruments import (
     Instrument,
     InstrumentCreate,
     InstrumentState,
+    InstrumentType,
 )
+
+
+class InstrumentData(TypedDict):
+    """Type definition for instrument initialization data"""
+
+    name: str
+    type: InstrumentType
+    manufacturer: str
+    model: str
+    year: int
 
 
 _INSTRUMENTS: dict = {}
@@ -23,24 +35,24 @@ class InstrumentService:
 
         global _INSTRUMENT_COUNTER, _INSTRUMENTS
 
-        sample_instruments = [
+        sample_instruments: list[InstrumentData] = [
             {
                 "name": "Precision Balance A",
-                "type": "balance",
+                "type": InstrumentType.BALANCE,
                 "manufacturer": "Ohaus",
                 "model": "PA413C",
                 "year": 2022,
             },
             {
                 "name": "Centrifuge Z3",
-                "type": "centrifuge",
+                "type": InstrumentType.CENTRIFUGE,
                 "manufacturer": "Hermle",
                 "model": "Z 36 HK",
                 "year": 2021,
             },
             {
                 "name": "Spectrometer UV-Vis",
-                "type": "spectrometer",
+                "type": InstrumentType.SPECTROMETER,
                 "manufacturer": "PerkinElmer",
                 "model": "Lambda 25",
                 "year": 2020,
@@ -59,13 +71,12 @@ class InstrumentService:
                 specifications={},
             )
 
-
     def register_instrument(self, payload: InstrumentCreate) -> Instrument:
         """Register a new instrument
-        
+
         Args:
             payload: Instrument creation data
-            
+
         Returns:
             Created instrument
         """
@@ -81,15 +92,14 @@ class InstrumentService:
             last_calibration=None,
             next_maintenance=datetime.now(timezone.utc) + timedelta(days=90),
             measurement_count=0,
-            specifications=payload.specifications or {},
         )
         _INSTRUMENTS[_INSTRUMENT_COUNTER] = instrument
 
         return instrument
 
-    def get_available_instruments(self) -> List[Instrument]:
+    def get_available_instruments(self) -> list[Instrument]:
         """Get all registered instruments
-        
+
         Returns:
             List of instruments
         """
@@ -98,56 +108,54 @@ class InstrumentService:
 
     def get_instrument_status(self, instrument_id: int) -> Instrument:
         """Get detailed status of an instrument
-        
+
         Args:
             instrument_id: Instrument ID
-            
+
         Returns:
             Instrument details
-            
+
         Raises:
             HTTPException: If instrument not found
         """
 
         instrument = _INSTRUMENTS.get(instrument_id)
-        
+
         if instrument is None:
             raise HTTPException(
                 status_code=404,
                 detail=f"Instrument with id {instrument_id} not found",
             )
-        
+
         return instrument
 
     def retire_instrument(self, instrument_id: int) -> int:
-        """Retire an instrument (mark as maintenance)
-        
+        """Retire/delete an instrument
+
         Args:
             instrument_id: Instrument ID
-            
+
         Returns:
             Retired instrument ID
-            
+
         Raises:
             HTTPException: If instrument not found
         """
 
-        instrument = self.get_instrument_status(instrument_id)
-        instrument.state = InstrumentState.MAINTENANCE
-        
-        _INSTRUMENTS[instrument_id] = instrument
-        return instrument_id
+        self.get_instrument_status(instrument_id)
 
+        del _INSTRUMENTS[instrument_id]
+        return instrument_id
 
     def calibrate_instrument(self, instrument_id: int) -> Instrument:
         """Calibrate an instrument
-        
+
         Args:
             instrument_id: Instrument ID
-            
+
         Returns:
             Updated instrument with calibration timestamp
-            
+
         Raises:
             HTTPException: If instrument not found
         """
