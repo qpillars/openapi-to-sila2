@@ -1,7 +1,13 @@
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
 from sila2.client import SilaClient
 from sila2.framework import FullyQualifiedFeatureIdentifier
+
+# Add examples directory to path to enable absolute imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # This import registers all the generated features, errors, types, etc.
 # The files are generated during the build process by the sila2-codegen tool
@@ -19,8 +25,8 @@ class Client(SilaClient):
 
     _expected_features: set[FullyQualifiedFeatureIdentifier] = {
         FullyQualifiedFeatureIdentifier("org.silastandard/core/SiLAService/v1"),
-        FullyQualifiedFeatureIdentifier("org.silastandard/generator/AuthenticationFeature/v1"),
-        FullyQualifiedFeatureIdentifier("org.silastandard/generator/InstrumentsFeature/v1"),
+        # FullyQualifiedFeatureIdentifier("org.silastandard/generator/AuthenticationFeature/v1"),
+        # FullyQualifiedFeatureIdentifier("org.silastandard/generator/InstrumentsFeature/v1"),
         FullyQualifiedFeatureIdentifier("org.silastandard/generator/ObservableFeature/v1"),
     }
 

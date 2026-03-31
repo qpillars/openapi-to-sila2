@@ -25,10 +25,14 @@ def health_check():
 
 if __name__ == "__main__":
     import uvicorn
+    from pathlib import Path
+
+    mock_api_dir = Path(__file__).parent
 
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
         port=8000,
         reload=True,
+        reload_dirs=[str(mock_api_dir)],
     )

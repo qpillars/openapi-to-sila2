@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from sila2.client import ClientObservableProperty
 
-    from .observablefeature_types import MeasurementReading
+    from .types import MeasurementReading
 
 
 class ObservableFeatureClient:

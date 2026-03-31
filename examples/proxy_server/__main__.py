@@ -8,7 +8,7 @@ import typer
 from sila2.framework.utils import running_in_docker
 from typer import BadParameter, Option
 
-from .server import Server
+from server import Server
 
 logger = logging.getLogger(__name__)
 
