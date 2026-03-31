@@ -1,4 +1,3 @@
-import json
 import sys
 from pathlib import Path
 
@@ -6,8 +5,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from client import Client
-from generated.instrumentsfeature.types import (
-    InstrumentCreate,
+
+from generated.authenticationfeature.types import (
+    LoginLoginPostParameters,
+    LoginRequest,
 )
 
 
@@ -16,9 +17,7 @@ def main():
         client = Client.discover(server_name="QPillars Server")
         print(client._features)
 
-        subscription = (
-            client.ObservableFeature.StreamMeasurementsObservableMeasurementsGet.subscribe()
-        )
+        subscription = client.ObservableFeature.StreamMeasurementsObservableMeasurementsGet.subscribe()
 
         counter = 0
 
@@ -29,6 +28,12 @@ def main():
 
             if counter >= 5:
                 subscription.cancel()
+
+        security_token = client.AuthenticationFeature.LoginLoginPost(
+            RequestParameters=LoginLoginPostParameters(RequestBody=LoginRequest(Username="admin"))
+        ).LoginResponseResponse.AccessToken
+
+        print(f"Received security token: {security_token}")
 
     except Exception as e:
         print(f"An error occurred: {e}")

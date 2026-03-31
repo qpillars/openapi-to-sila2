@@ -25,7 +25,7 @@ class Client(SilaClient):
 
     _expected_features: set[FullyQualifiedFeatureIdentifier] = {
         FullyQualifiedFeatureIdentifier("org.silastandard/core/SiLAService/v1"),
-        # FullyQualifiedFeatureIdentifier("org.silastandard/generator/AuthenticationFeature/v1"),
+        FullyQualifiedFeatureIdentifier("org.silastandard/generator/AuthenticationFeature/v1"),
         # FullyQualifiedFeatureIdentifier("org.silastandard/generator/InstrumentsFeature/v1"),
         FullyQualifiedFeatureIdentifier("org.silastandard/generator/ObservableFeature/v1"),
     }

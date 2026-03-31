@@ -5,10 +5,9 @@ from pathlib import Path
 from uuid import UUID
 
 import typer
+from server import Server
 from sila2.framework.utils import running_in_docker
 from typer import BadParameter, Option
-
-from server import Server
 
 logger = logging.getLogger(__name__)
 

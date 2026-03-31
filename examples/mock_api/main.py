@@ -24,8 +24,9 @@ def health_check():
 
 
 if __name__ == "__main__":
-    import uvicorn
     from pathlib import Path
+
+    import uvicorn
 
     mock_api_dir = Path(__file__).parent
 

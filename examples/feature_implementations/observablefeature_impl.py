@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import os
 import threading
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import requests
 from dotenv import load_dotenv
@@ -21,11 +21,9 @@ load_dotenv()
 class ObservableFeatureImpl(ObservableFeatureBase):
     def __init__(self, parent_server: Server) -> None:
         super().__init__(parent_server=parent_server)
-        self.test_api_url = os.getenv(
-            "TEST_API_URL", "http://127.0.0.1:8000"
-        ).rstrip("/")
+        self.test_api_url = os.getenv("TEST_API_URL", "http://127.0.0.1:8000").rstrip("/")
 
-        self._emitter_thread: Optional[threading.Thread] = None
+        self._emitter_thread: threading.Thread | None = None
         self._stop_event = threading.Event()
         self._lock = threading.Lock()
 
@@ -63,17 +61,13 @@ class ObservableFeatureImpl(ObservableFeatureBase):
             self._emitter_thread = None
             self._stop_event.clear()
 
-    def StreamMeasurementsObservableMeasurementsGet_on_subscription(
-        self, *, metadata: MetadataDict
-    ) -> None:
+    def StreamMeasurementsObservableMeasurementsGet_on_subscription(self, *, metadata: MetadataDict) -> None:
         super().StreamMeasurementsObservableMeasurementsGet_on_subscription(metadata=metadata)
 
         with self._lock:
             if self._emitter_thread is None or not self._emitter_thread.is_alive():
                 self._stop_event.clear()
-                self._emitter_thread = threading.Thread(
-                    target=self.__emit_updates, daemon=True
-                )
+                self._emitter_thread = threading.Thread(target=self.__emit_updates, daemon=True)
                 self._emitter_thread.start()
 
         return None
