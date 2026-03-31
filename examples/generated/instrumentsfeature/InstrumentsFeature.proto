@@ -1,0 +1,178 @@
+syntax = "proto3";
+
+import "SiLAFramework.proto";
+
+package sila2.org.silastandard.generator.instrumentsfeature.v1;
+
+/* No description provided. */
+service InstrumentsFeature {
+  /* Register a new laboratory instrument (admin only) Args: payload: Instrument details service: Instrument service instance _: Login context Returns: Created instrument */
+  rpc RegisterNewInstrumentInstrumentsPost (sila2.org.silastandard.generator.instrumentsfeature.v1.RegisterNewInstrumentInstrumentsPost_Parameters) returns (sila2.org.silastandard.generator.instrumentsfeature.v1.RegisterNewInstrumentInstrumentsPost_Responses) {}
+  /* Get detailed status of an instrument Args: instrument_id: ID of the instrument Returns: Instrument status with state and metadata */
+  rpc GetInstrumentStatusInstrumentsInstrumentIdGet (sila2.org.silastandard.generator.instrumentsfeature.v1.GetInstrumentStatusInstrumentsInstrumentIdGet_Parameters) returns (sila2.org.silastandard.generator.instrumentsfeature.v1.GetInstrumentStatusInstrumentsInstrumentIdGet_Responses) {}
+  /* Retire/delete an instrument from service (admin only) Args: instrument_id: ID of instrument to retire service: Instrument service instance _: Login context Returns: Retired instrument ID */
+  rpc RetireInstrumentInstrumentsInstrumentIdDelete (sila2.org.silastandard.generator.instrumentsfeature.v1.RetireInstrumentInstrumentsInstrumentIdDelete_Parameters) returns (sila2.org.silastandard.generator.instrumentsfeature.v1.RetireInstrumentInstrumentsInstrumentIdDelete_Responses) {}
+  /* Calibrate an instrument (admin only) Updates calibration timestamp and schedules next maintenance. Args: instrument_id: ID of instrument to calibrate service: Instrument service instance _: Login context Returns: Updated instrument with new calibration timestamp */
+  rpc CalibrateInstrumentInstrumentsInstrumentIdCalibratePost (sila2.org.silastandard.generator.instrumentsfeature.v1.CalibrateInstrumentInstrumentsInstrumentIdCalibratePost_Parameters) returns (sila2.org.silastandard.generator.instrumentsfeature.v1.CalibrateInstrumentInstrumentsInstrumentIdCalibratePost_Responses) {}
+  /* Get all registered laboratory instruments
+
+Returns:
+    List of available instruments */
+  rpc Get_ListInstrumentsInstrumentsGet (sila2.org.silastandard.generator.instrumentsfeature.v1.Get_ListInstrumentsInstrumentsGet_Parameters) returns (sila2.org.silastandard.generator.instrumentsfeature.v1.Get_ListInstrumentsInstrumentsGet_Responses) {}
+}
+
+/* No description provided. */
+message DataType_ResponseListInstrumentsInstrumentsGet {
+  message ResponseListInstrumentsInstrumentsGet_Struct {
+    sila2.org.silastandard.String Name = 1;  /* Name of the instrument */
+    sila2.org.silastandard.String Type = 2;  /* Laboratory instrument types */
+    sila2.org.silastandard.String Manufacturer = 3;  /* Instrument manufacturer */
+    sila2.org.silastandard.String Model = 4;  /* Instrument model number */
+    sila2.org.silastandard.Integer Year = 5;  /* Year of manufacture */
+    sila2.org.silastandard.Integer Id = 6;  /* Unique instrument identifier */
+    sila2.org.silastandard.String State = 7;  /* State of an instrument */
+    sila2.org.silastandard.String LastCalibration = 8;  /* Timestamp of last calibration */
+    sila2.org.silastandard.String NextMaintenance = 9;  /* Scheduled maintenance date */
+    sila2.org.silastandard.Integer MeasurementCount = 10;  /* Total number of measurements recorded */
+    sila2.org.silastandard.String Specifications = 11;  /* Technical specifications */
+  }
+  repeated sila2.org.silastandard.generator.instrumentsfeature.v1.DataType_ResponseListInstrumentsInstrumentsGet.ResponseListInstrumentsInstrumentsGet_Struct ResponseListInstrumentsInstrumentsGet = 1;  /* No description provided. */
+}
+
+/* Request parameters for RegisterNewInstrumentInstrumentsPostParameters operation. */
+message DataType_RegisterNewInstrumentInstrumentsPostParameters {
+  message RegisterNewInstrumentInstrumentsPostParameters_Struct {
+    message HeaderParameters_Struct {
+      sila2.org.silastandard.String HTTPBearer = 1;  /* Httpbearer parameter. */
+    }
+    sila2.org.silastandard.generator.instrumentsfeature.v1.DataType_RegisterNewInstrumentInstrumentsPostParameters.RegisterNewInstrumentInstrumentsPostParameters_Struct.HeaderParameters_Struct HeaderParameters = 1;  /* The header parameters of the request. */
+    sila2.org.silastandard.generator.instrumentsfeature.v1.DataType_InstrumentCreate RequestBody = 2;  /* The body of the request. */
+  }
+  sila2.org.silastandard.generator.instrumentsfeature.v1.DataType_RegisterNewInstrumentInstrumentsPostParameters.RegisterNewInstrumentInstrumentsPostParameters_Struct RegisterNewInstrumentInstrumentsPostParameters = 1;  /* Request parameters for RegisterNewInstrumentInstrumentsPostParameters operation. */
+}
+
+/* Model for creating new instruments */
+message DataType_InstrumentCreate {
+  message InstrumentCreate_Struct {
+    sila2.org.silastandard.String Name = 1;  /* Name of the instrument */
+    sila2.org.silastandard.String Type = 2;  /* Laboratory instrument types */
+    sila2.org.silastandard.String Manufacturer = 3;  /* Instrument manufacturer */
+    sila2.org.silastandard.String Model = 4;  /* Instrument model number */
+    sila2.org.silastandard.Integer Year = 5;  /* Year of manufacture */
+    sila2.org.silastandard.String Specifications = 6;  /* Optional technical specifications */
+  }
+  sila2.org.silastandard.generator.instrumentsfeature.v1.DataType_InstrumentCreate.InstrumentCreate_Struct InstrumentCreate = 1;  /* Model for creating new instruments */
+}
+
+/* Full instrument model with runtime state */
+message DataType_Instrument {
+  message Instrument_Struct {
+    sila2.org.silastandard.String Name = 1;  /* Name of the instrument */
+    sila2.org.silastandard.String Type = 2;  /* Laboratory instrument types */
+    sila2.org.silastandard.String Manufacturer = 3;  /* Instrument manufacturer */
+    sila2.org.silastandard.String Model = 4;  /* Instrument model number */
+    sila2.org.silastandard.Integer Year = 5;  /* Year of manufacture */
+    sila2.org.silastandard.Integer Id = 6;  /* Unique instrument identifier */
+    sila2.org.silastandard.String State = 7;  /* State of an instrument */
+    sila2.org.silastandard.String LastCalibration = 8;  /* Timestamp of last calibration */
+    sila2.org.silastandard.String NextMaintenance = 9;  /* Scheduled maintenance date */
+    sila2.org.silastandard.Integer MeasurementCount = 10;  /* Total number of measurements recorded */
+    sila2.org.silastandard.String Specifications = 11;  /* Technical specifications */
+  }
+  sila2.org.silastandard.generator.instrumentsfeature.v1.DataType_Instrument.Instrument_Struct Instrument = 1;  /* Full instrument model with runtime state */
+}
+
+/* Request parameters for GetInstrumentStatusInstrumentsInstrumentIdGetParameters operation. */
+message DataType_GetInstrumentStatusInstrumentsInstrumentIdGetParameters {
+  message GetInstrumentStatusInstrumentsInstrumentIdGetParameters_Struct {
+    message PathParameters_Struct {
+      sila2.org.silastandard.Integer InstrumentId = 1;  /* Instrument_id parameter. */
+    }
+    sila2.org.silastandard.generator.instrumentsfeature.v1.DataType_GetInstrumentStatusInstrumentsInstrumentIdGetParameters.GetInstrumentStatusInstrumentsInstrumentIdGetParameters_Struct.PathParameters_Struct PathParameters = 1;  /* The path parameters of the request. */
+  }
+  sila2.org.silastandard.generator.instrumentsfeature.v1.DataType_GetInstrumentStatusInstrumentsInstrumentIdGetParameters.GetInstrumentStatusInstrumentsInstrumentIdGetParameters_Struct GetInstrumentStatusInstrumentsInstrumentIdGetParameters = 1;  /* Request parameters for GetInstrumentStatusInstrumentsInstrumentIdGetParameters operation. */
+}
+
+/* Request parameters for RetireInstrumentInstrumentsInstrumentIdDeleteParameters operation. */
+message DataType_RetireInstrumentInstrumentsInstrumentIdDeleteParameters {
+  message RetireInstrumentInstrumentsInstrumentIdDeleteParameters_Struct {
+    message PathParameters_Struct {
+      sila2.org.silastandard.Integer InstrumentId = 1;  /* Instrument_id parameter. */
+    }
+    message HeaderParameters_Struct {
+      sila2.org.silastandard.String HTTPBearer = 1;  /* Httpbearer parameter. */
+    }
+    sila2.org.silastandard.generator.instrumentsfeature.v1.DataType_RetireInstrumentInstrumentsInstrumentIdDeleteParameters.RetireInstrumentInstrumentsInstrumentIdDeleteParameters_Struct.PathParameters_Struct PathParameters = 1;  /* The path parameters of the request. */
+    sila2.org.silastandard.generator.instrumentsfeature.v1.DataType_RetireInstrumentInstrumentsInstrumentIdDeleteParameters.RetireInstrumentInstrumentsInstrumentIdDeleteParameters_Struct.HeaderParameters_Struct HeaderParameters = 2;  /* The header parameters of the request. */
+  }
+  sila2.org.silastandard.generator.instrumentsfeature.v1.DataType_RetireInstrumentInstrumentsInstrumentIdDeleteParameters.RetireInstrumentInstrumentsInstrumentIdDeleteParameters_Struct RetireInstrumentInstrumentsInstrumentIdDeleteParameters = 1;  /* Request parameters for RetireInstrumentInstrumentsInstrumentIdDeleteParameters operation. */
+}
+
+/* No description provided. */
+message DataType_ResponseRetireInstrumentInstrumentsInstrumentIdDelete {
+  sila2.org.silastandard.Integer ResponseRetireInstrumentInstrumentsInstrumentIdDelete = 1;  /* No description provided. */
+}
+
+/* Request parameters for CalibrateInstrumentInstrumentsInstrumentIdCalibratePostParameters operation. */
+message DataType_CalibrateInstrumentInstrumentsInstrumentIdCalibratePostParameters {
+  message CalibrateInstrumentInstrumentsInstrumentIdCalibratePostParameters_Struct {
+    message PathParameters_Struct {
+      sila2.org.silastandard.Integer InstrumentId = 1;  /* Instrument_id parameter. */
+    }
+    message HeaderParameters_Struct {
+      sila2.org.silastandard.String HTTPBearer = 1;  /* Httpbearer parameter. */
+    }
+    sila2.org.silastandard.generator.instrumentsfeature.v1.DataType_CalibrateInstrumentInstrumentsInstrumentIdCalibratePostParameters.CalibrateInstrumentInstrumentsInstrumentIdCalibratePostParameters_Struct.PathParameters_Struct PathParameters = 1;  /* The path parameters of the request. */
+    sila2.org.silastandard.generator.instrumentsfeature.v1.DataType_CalibrateInstrumentInstrumentsInstrumentIdCalibratePostParameters.CalibrateInstrumentInstrumentsInstrumentIdCalibratePostParameters_Struct.HeaderParameters_Struct HeaderParameters = 2;  /* The header parameters of the request. */
+  }
+  sila2.org.silastandard.generator.instrumentsfeature.v1.DataType_CalibrateInstrumentInstrumentsInstrumentIdCalibratePostParameters.CalibrateInstrumentInstrumentsInstrumentIdCalibratePostParameters_Struct CalibrateInstrumentInstrumentsInstrumentIdCalibratePostParameters = 1;  /* Request parameters for CalibrateInstrumentInstrumentsInstrumentIdCalibratePostParameters operation. */
+}
+
+/* Parameters for RegisterNewInstrumentInstrumentsPost */
+message RegisterNewInstrumentInstrumentsPost_Parameters {
+  sila2.org.silastandard.generator.instrumentsfeature.v1.DataType_RegisterNewInstrumentInstrumentsPostParameters RequestParameters = 1;  /* The parameters and payload of the request. */
+}
+
+/* Responses of RegisterNewInstrumentInstrumentsPost */
+message RegisterNewInstrumentInstrumentsPost_Responses {
+  sila2.org.silastandard.generator.instrumentsfeature.v1.DataType_Instrument InstrumentResponse = 1;  /* Response containing the Instrument. */
+}
+
+/* Parameters for GetInstrumentStatusInstrumentsInstrumentIdGet */
+message GetInstrumentStatusInstrumentsInstrumentIdGet_Parameters {
+  sila2.org.silastandard.generator.instrumentsfeature.v1.DataType_GetInstrumentStatusInstrumentsInstrumentIdGetParameters RequestParameters = 1;  /* The parameters and payload of the request. */
+}
+
+/* Responses of GetInstrumentStatusInstrumentsInstrumentIdGet */
+message GetInstrumentStatusInstrumentsInstrumentIdGet_Responses {
+  sila2.org.silastandard.generator.instrumentsfeature.v1.DataType_Instrument InstrumentResponse = 1;  /* Response containing the Instrument. */
+}
+
+/* Parameters for RetireInstrumentInstrumentsInstrumentIdDelete */
+message RetireInstrumentInstrumentsInstrumentIdDelete_Parameters {
+  sila2.org.silastandard.generator.instrumentsfeature.v1.DataType_RetireInstrumentInstrumentsInstrumentIdDeleteParameters RequestParameters = 1;  /* The parameters and payload of the request. */
+}
+
+/* Responses of RetireInstrumentInstrumentsInstrumentIdDelete */
+message RetireInstrumentInstrumentsInstrumentIdDelete_Responses {
+  sila2.org.silastandard.generator.instrumentsfeature.v1.DataType_ResponseRetireInstrumentInstrumentsInstrumentIdDelete ResponseRetireInstrumentInstrumentsInstrumentIdDeleteResponse = 1;  /* Response containing the Response Retire Instrument Instruments Instrument Id Delete. */
+}
+
+/* Parameters for CalibrateInstrumentInstrumentsInstrumentIdCalibratePost */
+message CalibrateInstrumentInstrumentsInstrumentIdCalibratePost_Parameters {
+  sila2.org.silastandard.generator.instrumentsfeature.v1.DataType_CalibrateInstrumentInstrumentsInstrumentIdCalibratePostParameters RequestParameters = 1;  /* The parameters and payload of the request. */
+}
+
+/* Responses of CalibrateInstrumentInstrumentsInstrumentIdCalibratePost */
+message CalibrateInstrumentInstrumentsInstrumentIdCalibratePost_Responses {
+  sila2.org.silastandard.generator.instrumentsfeature.v1.DataType_Instrument InstrumentResponse = 1;  /* Response containing the Instrument. */
+}
+
+/* Parameters for ListInstrumentsInstrumentsGet */
+message Get_ListInstrumentsInstrumentsGet_Parameters {
+}
+
+/* Responses of ListInstrumentsInstrumentsGet */
+message Get_ListInstrumentsInstrumentsGet_Responses {
+  sila2.org.silastandard.generator.instrumentsfeature.v1.DataType_ResponseListInstrumentsInstrumentsGet ListInstrumentsInstrumentsGet = 1;  /* Get all registered laboratory instruments Returns: List of available instruments */
+}

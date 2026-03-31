@@ -81,7 +81,7 @@ def event_stream(
         yield json.dumps(error_data) + "\n"
 
 
-@router.get("/measurements")
+@router.get("/measurements", response_model=MeasurementReading)
 def stream_measurements(
     service: InstrumentService = Depends(get_instrument_service),
 ):
@@ -98,5 +98,5 @@ def stream_measurements(
 
     return StreamingResponse(
         event_stream(service),
-        media_type="application/x-ndjson",
+        media_type="application/json",
     )

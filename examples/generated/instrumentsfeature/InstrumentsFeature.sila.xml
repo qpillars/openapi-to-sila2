@@ -1,0 +1,721 @@
+<Feature xmlns="http://www.sila-standard.org" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Category="generator" FeatureVersion="1.0" Originator="org.silastandard" SiLA2Version="1.0" xsi:schemaLocation="http://www.sila-standard.org https://gitlab.com/SiLA2/sila_base/raw/master/schema/FeatureDefinition.xsd">
+  <Identifier>InstrumentsFeature</Identifier>
+  <DisplayName>Instruments Feature</DisplayName>
+  <Description>No description provided.</Description>
+  <DefinedExecutionError>
+    <Identifier>InstrumentsError</Identifier>
+    <DisplayName>Instruments Error</DisplayName>
+    <Description>Generic error for the feature.</Description>
+  </DefinedExecutionError>
+  <Property>
+    <Identifier>ListInstrumentsInstrumentsGet</Identifier>
+    <DisplayName>List Instruments</DisplayName>
+    <Description>Get all registered laboratory instruments
+
+Returns:
+    List of available instruments</Description>
+    <Observable>No</Observable>
+    <DataType>
+      <DataTypeIdentifier>ResponseListInstrumentsInstrumentsGet</DataTypeIdentifier>
+    </DataType>
+    <DefinedExecutionErrors>
+      <Identifier>InstrumentsError</Identifier>
+    </DefinedExecutionErrors>
+  </Property>
+  <DataTypeDefinition>
+    <Identifier>ResponseListInstrumentsInstrumentsGet</Identifier>
+    <DisplayName>Response List Instruments Instruments  Get</DisplayName>
+    <Description>No description provided.</Description>
+    <DataType>
+      <List>
+        <DataType>
+          <Structure>
+            <Element>
+              <Identifier>Name</Identifier>
+              <DisplayName>Name</DisplayName>
+              <Description>Name of the instrument</Description>
+              <DataType>
+                <Constrained>
+                  <DataType>
+                    <Basic>String</Basic>
+                  </DataType>
+                  <Constraints>
+                    <MinimalLength>1</MinimalLength>
+                    <MaximalLength>100</MaximalLength>
+                  </Constraints>
+                </Constrained>
+              </DataType>
+            </Element>
+            <Element>
+              <Identifier>Type</Identifier>
+              <DisplayName>Type</DisplayName>
+              <Description>Laboratory instrument types</Description>
+              <DataType>
+                <Constrained>
+                  <DataType>
+                    <Basic>String</Basic>
+                  </DataType>
+                  <Constraints>
+                    <Set>
+                      <Value>microscope</Value>
+                      <Value>centrifuge</Value>
+                      <Value>spectrometer</Value>
+                      <Value>balance</Value>
+                    </Set>
+                  </Constraints>
+                </Constrained>
+              </DataType>
+            </Element>
+            <Element>
+              <Identifier>Manufacturer</Identifier>
+              <DisplayName>Manufacturer</DisplayName>
+              <Description>Instrument manufacturer</Description>
+              <DataType>
+                <Constrained>
+                  <DataType>
+                    <Basic>String</Basic>
+                  </DataType>
+                  <Constraints>
+                    <MinimalLength>1</MinimalLength>
+                    <MaximalLength>100</MaximalLength>
+                  </Constraints>
+                </Constrained>
+              </DataType>
+            </Element>
+            <Element>
+              <Identifier>Model</Identifier>
+              <DisplayName>Model</DisplayName>
+              <Description>Instrument model number</Description>
+              <DataType>
+                <Constrained>
+                  <DataType>
+                    <Basic>String</Basic>
+                  </DataType>
+                  <Constraints>
+                    <MinimalLength>1</MinimalLength>
+                    <MaximalLength>100</MaximalLength>
+                  </Constraints>
+                </Constrained>
+              </DataType>
+            </Element>
+            <Element>
+              <Identifier>Year</Identifier>
+              <DisplayName>Year</DisplayName>
+              <Description>Year of manufacture</Description>
+              <DataType>
+                <Constrained>
+                  <DataType>
+                    <Basic>Integer</Basic>
+                  </DataType>
+                  <Constraints>
+                    <MinimalInclusive>1900.0</MinimalInclusive>
+                    <MaximalInclusive>2100.0</MaximalInclusive>
+                  </Constraints>
+                </Constrained>
+              </DataType>
+            </Element>
+            <Element>
+              <Identifier>Id</Identifier>
+              <DisplayName>Id</DisplayName>
+              <Description>Unique instrument identifier</Description>
+              <DataType>
+                <Basic>Integer</Basic>
+              </DataType>
+            </Element>
+            <Element>
+              <Identifier>State</Identifier>
+              <DisplayName>State</DisplayName>
+              <Description>State of an instrument</Description>
+              <DataType>
+                <Constrained>
+                  <DataType>
+                    <Basic>String</Basic>
+                  </DataType>
+                  <Constraints>
+                    <Set>
+                      <Value>idle</Value>
+                      <Value>calibrating</Value>
+                      <Value>running</Value>
+                      <Value>maintenance</Value>
+                      <Value>error</Value>
+                    </Set>
+                  </Constraints>
+                </Constrained>
+              </DataType>
+            </Element>
+            <Element>
+              <Identifier>LastCalibration</Identifier>
+              <DisplayName>Last_calibration</DisplayName>
+              <Description>Timestamp of last calibration</Description>
+              <DataType>
+                <Basic>String</Basic>
+              </DataType>
+            </Element>
+            <Element>
+              <Identifier>NextMaintenance</Identifier>
+              <DisplayName>Next_maintenance</DisplayName>
+              <Description>Scheduled maintenance date</Description>
+              <DataType>
+                <Basic>String</Basic>
+              </DataType>
+            </Element>
+            <Element>
+              <Identifier>MeasurementCount</Identifier>
+              <DisplayName>Measurement_count</DisplayName>
+              <Description>Total number of measurements recorded</Description>
+              <DataType>
+                <Basic>Integer</Basic>
+              </DataType>
+            </Element>
+            <Element>
+              <Identifier>Specifications</Identifier>
+              <DisplayName>Specifications</DisplayName>
+              <Description>Technical specifications</Description>
+              <DataType>
+                <Basic>String</Basic>
+              </DataType>
+            </Element>
+          </Structure>
+        </DataType>
+      </List>
+    </DataType>
+  </DataTypeDefinition>
+  <Command>
+    <Identifier>RegisterNewInstrumentInstrumentsPost</Identifier>
+    <DisplayName>Register New Instrument</DisplayName>
+    <Description>Register a new laboratory instrument (admin only)
+
+Args:
+    payload: Instrument details
+    service: Instrument service instance
+    _: Login context
+Returns:
+    Created instrument</Description>
+    <Observable>No</Observable>
+    <Parameter>
+      <Identifier>RequestParameters</Identifier>
+      <DisplayName>Request Parameters</DisplayName>
+      <Description>The parameters and payload of the request.</Description>
+      <DataType>
+        <DataTypeIdentifier>RegisterNewInstrumentInstrumentsPostParameters</DataTypeIdentifier>
+      </DataType>
+    </Parameter>
+    <Response>
+      <Identifier>InstrumentResponse</Identifier>
+      <DisplayName>Instrument Response</DisplayName>
+      <Description>Response containing the Instrument.</Description>
+      <DataType>
+        <DataTypeIdentifier>Instrument</DataTypeIdentifier>
+      </DataType>
+    </Response>
+    <DefinedExecutionErrors>
+      <Identifier>InstrumentsError</Identifier>
+    </DefinedExecutionErrors>
+  </Command>
+  <DataTypeDefinition>
+    <Identifier>RegisterNewInstrumentInstrumentsPostParameters</Identifier>
+    <DisplayName>RegisterNewInstrumentInstrumentsPostParameters Request Parameters</DisplayName>
+    <Description>Request parameters for RegisterNewInstrumentInstrumentsPostParameters operation.</Description>
+    <DataType>
+      <Structure>
+        <Element>
+          <Identifier>HeaderParameters</Identifier>
+          <DisplayName>Header Parameters</DisplayName>
+          <Description>The header parameters of the request.</Description>
+          <DataType>
+            <Structure>
+              <Element>
+                <Identifier>HTTPBearer</Identifier>
+                <DisplayName>Httpbearer</DisplayName>
+                <Description>Httpbearer parameter.</Description>
+                <DataType>
+                  <Basic>String</Basic>
+                </DataType>
+              </Element>
+            </Structure>
+          </DataType>
+        </Element>
+        <Element>
+          <Identifier>RequestBody</Identifier>
+          <DisplayName>Request Body</DisplayName>
+          <Description>The body of the request.</Description>
+          <DataType>
+            <DataTypeIdentifier>InstrumentCreate</DataTypeIdentifier>
+          </DataType>
+        </Element>
+      </Structure>
+    </DataType>
+  </DataTypeDefinition>
+  <DataTypeDefinition>
+    <Identifier>InstrumentCreate</Identifier>
+    <DisplayName>InstrumentCreate</DisplayName>
+    <Description>Model for creating new instruments</Description>
+    <DataType>
+      <Structure>
+        <Element>
+          <Identifier>Name</Identifier>
+          <DisplayName>Name</DisplayName>
+          <Description>Name of the instrument</Description>
+          <DataType>
+            <Constrained>
+              <DataType>
+                <Basic>String</Basic>
+              </DataType>
+              <Constraints>
+                <MinimalLength>1</MinimalLength>
+                <MaximalLength>100</MaximalLength>
+              </Constraints>
+            </Constrained>
+          </DataType>
+        </Element>
+        <Element>
+          <Identifier>Type</Identifier>
+          <DisplayName>Type</DisplayName>
+          <Description>Laboratory instrument types</Description>
+          <DataType>
+            <Constrained>
+              <DataType>
+                <Basic>String</Basic>
+              </DataType>
+              <Constraints>
+                <Set>
+                  <Value>microscope</Value>
+                  <Value>centrifuge</Value>
+                  <Value>spectrometer</Value>
+                  <Value>balance</Value>
+                </Set>
+              </Constraints>
+            </Constrained>
+          </DataType>
+        </Element>
+        <Element>
+          <Identifier>Manufacturer</Identifier>
+          <DisplayName>Manufacturer</DisplayName>
+          <Description>Instrument manufacturer</Description>
+          <DataType>
+            <Constrained>
+              <DataType>
+                <Basic>String</Basic>
+              </DataType>
+              <Constraints>
+                <MinimalLength>1</MinimalLength>
+                <MaximalLength>100</MaximalLength>
+              </Constraints>
+            </Constrained>
+          </DataType>
+        </Element>
+        <Element>
+          <Identifier>Model</Identifier>
+          <DisplayName>Model</DisplayName>
+          <Description>Instrument model number</Description>
+          <DataType>
+            <Constrained>
+              <DataType>
+                <Basic>String</Basic>
+              </DataType>
+              <Constraints>
+                <MinimalLength>1</MinimalLength>
+                <MaximalLength>100</MaximalLength>
+              </Constraints>
+            </Constrained>
+          </DataType>
+        </Element>
+        <Element>
+          <Identifier>Year</Identifier>
+          <DisplayName>Year</DisplayName>
+          <Description>Year of manufacture</Description>
+          <DataType>
+            <Constrained>
+              <DataType>
+                <Basic>Integer</Basic>
+              </DataType>
+              <Constraints>
+                <MinimalInclusive>1900.0</MinimalInclusive>
+                <MaximalInclusive>2100.0</MaximalInclusive>
+              </Constraints>
+            </Constrained>
+          </DataType>
+        </Element>
+        <Element>
+          <Identifier>Specifications</Identifier>
+          <DisplayName>Specifications</DisplayName>
+          <Description>Optional technical specifications</Description>
+          <DataType>
+            <Basic>String</Basic>
+          </DataType>
+        </Element>
+      </Structure>
+    </DataType>
+  </DataTypeDefinition>
+  <DataTypeDefinition>
+    <Identifier>Instrument</Identifier>
+    <DisplayName>Instrument</DisplayName>
+    <Description>Full instrument model with runtime state</Description>
+    <DataType>
+      <Structure>
+        <Element>
+          <Identifier>Name</Identifier>
+          <DisplayName>Name</DisplayName>
+          <Description>Name of the instrument</Description>
+          <DataType>
+            <Constrained>
+              <DataType>
+                <Basic>String</Basic>
+              </DataType>
+              <Constraints>
+                <MinimalLength>1</MinimalLength>
+                <MaximalLength>100</MaximalLength>
+              </Constraints>
+            </Constrained>
+          </DataType>
+        </Element>
+        <Element>
+          <Identifier>Type</Identifier>
+          <DisplayName>Type</DisplayName>
+          <Description>Laboratory instrument types</Description>
+          <DataType>
+            <Constrained>
+              <DataType>
+                <Basic>String</Basic>
+              </DataType>
+              <Constraints>
+                <Set>
+                  <Value>microscope</Value>
+                  <Value>centrifuge</Value>
+                  <Value>spectrometer</Value>
+                  <Value>balance</Value>
+                </Set>
+              </Constraints>
+            </Constrained>
+          </DataType>
+        </Element>
+        <Element>
+          <Identifier>Manufacturer</Identifier>
+          <DisplayName>Manufacturer</DisplayName>
+          <Description>Instrument manufacturer</Description>
+          <DataType>
+            <Constrained>
+              <DataType>
+                <Basic>String</Basic>
+              </DataType>
+              <Constraints>
+                <MinimalLength>1</MinimalLength>
+                <MaximalLength>100</MaximalLength>
+              </Constraints>
+            </Constrained>
+          </DataType>
+        </Element>
+        <Element>
+          <Identifier>Model</Identifier>
+          <DisplayName>Model</DisplayName>
+          <Description>Instrument model number</Description>
+          <DataType>
+            <Constrained>
+              <DataType>
+                <Basic>String</Basic>
+              </DataType>
+              <Constraints>
+                <MinimalLength>1</MinimalLength>
+                <MaximalLength>100</MaximalLength>
+              </Constraints>
+            </Constrained>
+          </DataType>
+        </Element>
+        <Element>
+          <Identifier>Year</Identifier>
+          <DisplayName>Year</DisplayName>
+          <Description>Year of manufacture</Description>
+          <DataType>
+            <Constrained>
+              <DataType>
+                <Basic>Integer</Basic>
+              </DataType>
+              <Constraints>
+                <MinimalInclusive>1900.0</MinimalInclusive>
+                <MaximalInclusive>2100.0</MaximalInclusive>
+              </Constraints>
+            </Constrained>
+          </DataType>
+        </Element>
+        <Element>
+          <Identifier>Id</Identifier>
+          <DisplayName>Id</DisplayName>
+          <Description>Unique instrument identifier</Description>
+          <DataType>
+            <Basic>Integer</Basic>
+          </DataType>
+        </Element>
+        <Element>
+          <Identifier>State</Identifier>
+          <DisplayName>State</DisplayName>
+          <Description>State of an instrument</Description>
+          <DataType>
+            <Constrained>
+              <DataType>
+                <Basic>String</Basic>
+              </DataType>
+              <Constraints>
+                <Set>
+                  <Value>idle</Value>
+                  <Value>calibrating</Value>
+                  <Value>running</Value>
+                  <Value>maintenance</Value>
+                  <Value>error</Value>
+                </Set>
+              </Constraints>
+            </Constrained>
+          </DataType>
+        </Element>
+        <Element>
+          <Identifier>LastCalibration</Identifier>
+          <DisplayName>Last_calibration</DisplayName>
+          <Description>Timestamp of last calibration</Description>
+          <DataType>
+            <Basic>String</Basic>
+          </DataType>
+        </Element>
+        <Element>
+          <Identifier>NextMaintenance</Identifier>
+          <DisplayName>Next_maintenance</DisplayName>
+          <Description>Scheduled maintenance date</Description>
+          <DataType>
+            <Basic>String</Basic>
+          </DataType>
+        </Element>
+        <Element>
+          <Identifier>MeasurementCount</Identifier>
+          <DisplayName>Measurement_count</DisplayName>
+          <Description>Total number of measurements recorded</Description>
+          <DataType>
+            <Basic>Integer</Basic>
+          </DataType>
+        </Element>
+        <Element>
+          <Identifier>Specifications</Identifier>
+          <DisplayName>Specifications</DisplayName>
+          <Description>Technical specifications</Description>
+          <DataType>
+            <Basic>String</Basic>
+          </DataType>
+        </Element>
+      </Structure>
+    </DataType>
+  </DataTypeDefinition>
+  <Command>
+    <Identifier>GetInstrumentStatusInstrumentsInstrumentIdGet</Identifier>
+    <DisplayName>Get Instrument Status</DisplayName>
+    <Description>Get detailed status of an instrument
+
+Args:
+    instrument_id: ID of the instrument
+
+Returns:
+    Instrument status with state and metadata</Description>
+    <Observable>No</Observable>
+    <Parameter>
+      <Identifier>RequestParameters</Identifier>
+      <DisplayName>Request Parameters</DisplayName>
+      <Description>The parameters and payload of the request.</Description>
+      <DataType>
+        <DataTypeIdentifier>GetInstrumentStatusInstrumentsInstrumentIdGetParameters</DataTypeIdentifier>
+      </DataType>
+    </Parameter>
+    <Response>
+      <Identifier>InstrumentResponse</Identifier>
+      <DisplayName>Instrument Response</DisplayName>
+      <Description>Response containing the Instrument.</Description>
+      <DataType>
+        <DataTypeIdentifier>Instrument</DataTypeIdentifier>
+      </DataType>
+    </Response>
+    <DefinedExecutionErrors>
+      <Identifier>InstrumentsError</Identifier>
+    </DefinedExecutionErrors>
+  </Command>
+  <DataTypeDefinition>
+    <Identifier>GetInstrumentStatusInstrumentsInstrumentIdGetParameters</Identifier>
+    <DisplayName>GetInstrumentStatusInstrumentsInstrumentIdGetParameters Request Parameters</DisplayName>
+    <Description>Request parameters for GetInstrumentStatusInstrumentsInstrumentIdGetParameters operation.</Description>
+    <DataType>
+      <Structure>
+        <Element>
+          <Identifier>PathParameters</Identifier>
+          <DisplayName>Path Parameters</DisplayName>
+          <Description>The path parameters of the request.</Description>
+          <DataType>
+            <Structure>
+              <Element>
+                <Identifier>InstrumentId</Identifier>
+                <DisplayName>Instrument_id</DisplayName>
+                <Description>Instrument_id parameter.</Description>
+                <DataType>
+                  <Basic>Integer</Basic>
+                </DataType>
+              </Element>
+            </Structure>
+          </DataType>
+        </Element>
+      </Structure>
+    </DataType>
+  </DataTypeDefinition>
+  <Command>
+    <Identifier>RetireInstrumentInstrumentsInstrumentIdDelete</Identifier>
+    <DisplayName>Retire Instrument</DisplayName>
+    <Description>Retire/delete an instrument from service (admin only)
+
+Args:
+    instrument_id: ID of instrument to retire
+    service: Instrument service instance
+    _: Login context
+Returns:
+    Retired instrument ID</Description>
+    <Observable>No</Observable>
+    <Parameter>
+      <Identifier>RequestParameters</Identifier>
+      <DisplayName>Request Parameters</DisplayName>
+      <Description>The parameters and payload of the request.</Description>
+      <DataType>
+        <DataTypeIdentifier>RetireInstrumentInstrumentsInstrumentIdDeleteParameters</DataTypeIdentifier>
+      </DataType>
+    </Parameter>
+    <Response>
+      <Identifier>ResponseRetireInstrumentInstrumentsInstrumentIdDeleteResponse</Identifier>
+      <DisplayName>Response Retire Instrument Instruments  Instrument Id  Delete Response</DisplayName>
+      <Description>Response containing the Response Retire Instrument Instruments  Instrument Id  Delete.</Description>
+      <DataType>
+        <DataTypeIdentifier>ResponseRetireInstrumentInstrumentsInstrumentIdDelete</DataTypeIdentifier>
+      </DataType>
+    </Response>
+    <DefinedExecutionErrors>
+      <Identifier>InstrumentsError</Identifier>
+    </DefinedExecutionErrors>
+  </Command>
+  <DataTypeDefinition>
+    <Identifier>RetireInstrumentInstrumentsInstrumentIdDeleteParameters</Identifier>
+    <DisplayName>RetireInstrumentInstrumentsInstrumentIdDeleteParameters Request Parameters</DisplayName>
+    <Description>Request parameters for RetireInstrumentInstrumentsInstrumentIdDeleteParameters operation.</Description>
+    <DataType>
+      <Structure>
+        <Element>
+          <Identifier>PathParameters</Identifier>
+          <DisplayName>Path Parameters</DisplayName>
+          <Description>The path parameters of the request.</Description>
+          <DataType>
+            <Structure>
+              <Element>
+                <Identifier>InstrumentId</Identifier>
+                <DisplayName>Instrument_id</DisplayName>
+                <Description>Instrument_id parameter.</Description>
+                <DataType>
+                  <Basic>Integer</Basic>
+                </DataType>
+              </Element>
+            </Structure>
+          </DataType>
+        </Element>
+        <Element>
+          <Identifier>HeaderParameters</Identifier>
+          <DisplayName>Header Parameters</DisplayName>
+          <Description>The header parameters of the request.</Description>
+          <DataType>
+            <Structure>
+              <Element>
+                <Identifier>HTTPBearer</Identifier>
+                <DisplayName>Httpbearer</DisplayName>
+                <Description>Httpbearer parameter.</Description>
+                <DataType>
+                  <Basic>String</Basic>
+                </DataType>
+              </Element>
+            </Structure>
+          </DataType>
+        </Element>
+      </Structure>
+    </DataType>
+  </DataTypeDefinition>
+  <DataTypeDefinition>
+    <Identifier>ResponseRetireInstrumentInstrumentsInstrumentIdDelete</Identifier>
+    <DisplayName>Response Retire Instrument Instruments  Instrument Id  Delete</DisplayName>
+    <Description>No description provided.</Description>
+    <DataType>
+      <Basic>Integer</Basic>
+    </DataType>
+  </DataTypeDefinition>
+  <Command>
+    <Identifier>CalibrateInstrumentInstrumentsInstrumentIdCalibratePost</Identifier>
+    <DisplayName>Calibrate Instrument</DisplayName>
+    <Description>Calibrate an instrument (admin only)
+
+Updates calibration timestamp and schedules next maintenance.
+
+Args:
+    instrument_id: ID of instrument to calibrate
+    service: Instrument service instance
+    _: Login context
+Returns:
+    Updated instrument with new calibration timestamp</Description>
+    <Observable>No</Observable>
+    <Parameter>
+      <Identifier>RequestParameters</Identifier>
+      <DisplayName>Request Parameters</DisplayName>
+      <Description>The parameters and payload of the request.</Description>
+      <DataType>
+        <DataTypeIdentifier>CalibrateInstrumentInstrumentsInstrumentIdCalibratePostParameters</DataTypeIdentifier>
+      </DataType>
+    </Parameter>
+    <Response>
+      <Identifier>InstrumentResponse</Identifier>
+      <DisplayName>Instrument Response</DisplayName>
+      <Description>Response containing the Instrument.</Description>
+      <DataType>
+        <DataTypeIdentifier>Instrument</DataTypeIdentifier>
+      </DataType>
+    </Response>
+    <DefinedExecutionErrors>
+      <Identifier>InstrumentsError</Identifier>
+    </DefinedExecutionErrors>
+  </Command>
+  <DataTypeDefinition>
+    <Identifier>CalibrateInstrumentInstrumentsInstrumentIdCalibratePostParameters</Identifier>
+    <DisplayName>CalibrateInstrumentInstrumentsInstrumentIdCalibratePostParameters Request Parameters</DisplayName>
+    <Description>Request parameters for CalibrateInstrumentInstrumentsInstrumentIdCalibratePostParameters operation.</Description>
+    <DataType>
+      <Structure>
+        <Element>
+          <Identifier>PathParameters</Identifier>
+          <DisplayName>Path Parameters</DisplayName>
+          <Description>The path parameters of the request.</Description>
+          <DataType>
+            <Structure>
+              <Element>
+                <Identifier>InstrumentId</Identifier>
+                <DisplayName>Instrument_id</DisplayName>
+                <Description>Instrument_id parameter.</Description>
+                <DataType>
+                  <Basic>Integer</Basic>
+                </DataType>
+              </Element>
+            </Structure>
+          </DataType>
+        </Element>
+        <Element>
+          <Identifier>HeaderParameters</Identifier>
+          <DisplayName>Header Parameters</DisplayName>
+          <Description>The header parameters of the request.</Description>
+          <DataType>
+            <Structure>
+              <Element>
+                <Identifier>HTTPBearer</Identifier>
+                <DisplayName>Httpbearer</DisplayName>
+                <Description>Httpbearer parameter.</Description>
+                <DataType>
+                  <Basic>String</Basic>
+                </DataType>
+              </Element>
+            </Structure>
+          </DataType>
+        </Element>
+      </Structure>
+    </DataType>
+  </DataTypeDefinition>
+</Feature>

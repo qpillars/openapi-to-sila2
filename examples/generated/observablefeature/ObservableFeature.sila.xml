@@ -1,0 +1,95 @@
+<Feature xmlns="http://www.sila-standard.org" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Category="generator" FeatureVersion="1.0" Originator="org.silastandard" SiLA2Version="1.0" xsi:schemaLocation="http://www.sila-standard.org https://gitlab.com/SiLA2/sila_base/raw/master/schema/FeatureDefinition.xsd">
+  <Identifier>ObservableFeature</Identifier>
+  <DisplayName>Observable Feature</DisplayName>
+  <Description>No description provided.</Description>
+  <DefinedExecutionError>
+    <Identifier>ObservableError</Identifier>
+    <DisplayName>Observable Error</DisplayName>
+    <Description>Generic error for the feature.</Description>
+  </DefinedExecutionError>
+  <Property>
+    <Identifier>StreamMeasurementsObservableMeasurementsGet</Identifier>
+    <DisplayName>Stream Measurements</DisplayName>
+    <Description>Stream real-time measurements from all instruments
+
+Server-Sent Events stream of latest measurements across all instruments.
+
+Args:
+    service: Instrument service instance
+
+Returns:
+    StreamingResponse with JSON-encoded measurements</Description>
+    <Observable>Yes</Observable>
+    <DataType>
+      <DataTypeIdentifier>MeasurementReading</DataTypeIdentifier>
+    </DataType>
+    <DefinedExecutionErrors>
+      <Identifier>ObservableError</Identifier>
+    </DefinedExecutionErrors>
+  </Property>
+  <DataTypeDefinition>
+    <Identifier>MeasurementReading</Identifier>
+    <DisplayName>MeasurementReading</DisplayName>
+    <Description>Real-time measurement reading for streaming</Description>
+    <DataType>
+      <Structure>
+        <Element>
+          <Identifier>InstrumentId</Identifier>
+          <DisplayName>Instrument_id</DisplayName>
+          <Description>Source instrument ID</Description>
+          <DataType>
+            <Basic>Integer</Basic>
+          </DataType>
+        </Element>
+        <Element>
+          <Identifier>InstrumentName</Identifier>
+          <DisplayName>Instrument_name</DisplayName>
+          <Description>Source instrument name</Description>
+          <DataType>
+            <Basic>String</Basic>
+          </DataType>
+        </Element>
+        <Element>
+          <Identifier>Value</Identifier>
+          <DisplayName>Value</DisplayName>
+          <Description>Current measurement value</Description>
+          <DataType>
+            <Basic>Real</Basic>
+          </DataType>
+        </Element>
+        <Element>
+          <Identifier>Unit</Identifier>
+          <DisplayName>Unit</DisplayName>
+          <Description>Unit of measurement</Description>
+          <DataType>
+            <Basic>String</Basic>
+          </DataType>
+        </Element>
+        <Element>
+          <Identifier>Timestamp</Identifier>
+          <DisplayName>Timestamp</DisplayName>
+          <Description>Reading timestamp</Description>
+          <DataType>
+            <Basic>String</Basic>
+          </DataType>
+        </Element>
+        <Element>
+          <Identifier>Status</Identifier>
+          <DisplayName>Status</DisplayName>
+          <Description>Measurement status (ok, warning, error)</Description>
+          <DataType>
+            <Basic>String</Basic>
+          </DataType>
+        </Element>
+        <Element>
+          <Identifier>Metadata</Identifier>
+          <DisplayName>Metadata</DisplayName>
+          <Description>Optional additional data</Description>
+          <DataType>
+            <Basic>String</Basic>
+          </DataType>
+        </Element>
+      </Structure>
+    </DataType>
+  </DataTypeDefinition>
+</Feature>

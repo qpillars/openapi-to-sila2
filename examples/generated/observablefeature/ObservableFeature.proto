@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+import "SiLAFramework.proto";
+
+package sila2.org.silastandard.generator.observablefeature.v1;
+
+/* No description provided. */
+service ObservableFeature {
+  /* Stream real-time measurements from all instruments
+
+Server-Sent Events stream of latest measurements across all instruments.
+
+Args:
+    service: Instrument service instance
+
+Returns:
+    StreamingResponse with JSON-encoded measurements */
+  rpc Subscribe_StreamMeasurementsObservableMeasurementsGet (sila2.org.silastandard.generator.observablefeature.v1.Subscribe_StreamMeasurementsObservableMeasurementsGet_Parameters) returns (stream sila2.org.silastandard.generator.observablefeature.v1.Subscribe_StreamMeasurementsObservableMeasurementsGet_Responses) {}
+}
+
+/* Real-time measurement reading for streaming */
+message DataType_MeasurementReading {
+  message MeasurementReading_Struct {
+    sila2.org.silastandard.Integer InstrumentId = 1;  /* Source instrument ID */
+    sila2.org.silastandard.String InstrumentName = 2;  /* Source instrument name */
+    sila2.org.silastandard.Real Value = 3;  /* Current measurement value */
+    sila2.org.silastandard.String Unit = 4;  /* Unit of measurement */
+    sila2.org.silastandard.String Timestamp = 5;  /* Reading timestamp */
+    sila2.org.silastandard.String Status = 6;  /* Measurement status (ok, warning, error) */
+    sila2.org.silastandard.String Metadata = 7;  /* Optional additional data */
+  }
+  sila2.org.silastandard.generator.observablefeature.v1.DataType_MeasurementReading.MeasurementReading_Struct MeasurementReading = 1;  /* Real-time measurement reading for streaming */
+}
+
+/* Parameters for StreamMeasurementsObservableMeasurementsGet */
+message Subscribe_StreamMeasurementsObservableMeasurementsGet_Parameters {
+}
+
+/* Responses of StreamMeasurementsObservableMeasurementsGet */
+message Subscribe_StreamMeasurementsObservableMeasurementsGet_Responses {
+  sila2.org.silastandard.generator.observablefeature.v1.DataType_MeasurementReading StreamMeasurementsObservableMeasurementsGet = 1;  /* Stream real-time measurements from all instruments Server-Sent Events stream of latest measurements across all instruments. Args: service: Instrument service instance Returns: StreamingResponse with JSON-encoded measurements */
+}

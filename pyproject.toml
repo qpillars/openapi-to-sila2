@@ -56,7 +56,7 @@ dev = [
 [tool.ruff]
 line-length = 120
 src = ["src/", "examples/", "tests/"]
-exclude = ["tests/fixtures"]
+exclude = ["tests/fixtures", "examples/generated"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "W"]
