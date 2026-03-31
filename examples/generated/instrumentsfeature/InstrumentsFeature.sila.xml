@@ -7,7 +7,7 @@
     <DisplayName>Instruments Error</DisplayName>
     <Description>Generic error for the feature.</Description>
   </DefinedExecutionError>
-  <Property>
+  <Command>
     <Identifier>ListInstrumentsInstrumentsGet</Identifier>
     <DisplayName>List Instruments</DisplayName>
     <Description>Get all registered laboratory instruments
@@ -15,13 +15,60 @@
 Returns:
     List of available instruments</Description>
     <Observable>No</Observable>
-    <DataType>
-      <DataTypeIdentifier>ResponseListInstrumentsInstrumentsGet</DataTypeIdentifier>
-    </DataType>
+    <Parameter>
+      <Identifier>RequestParameters</Identifier>
+      <DisplayName>Request Parameters</DisplayName>
+      <Description>The parameters and payload of the request.</Description>
+      <DataType>
+        <DataTypeIdentifier>ListInstrumentsInstrumentsGetParameters</DataTypeIdentifier>
+      </DataType>
+    </Parameter>
+    <Response>
+      <Identifier>ResponseListInstrumentsInstrumentsGetResponse</Identifier>
+      <DisplayName>Response List Instruments Instruments  Get Response</DisplayName>
+      <Description>Response containing the Response List Instruments Instruments  Get.</Description>
+      <DataType>
+        <DataTypeIdentifier>ResponseListInstrumentsInstrumentsGet</DataTypeIdentifier>
+      </DataType>
+    </Response>
     <DefinedExecutionErrors>
       <Identifier>InstrumentsError</Identifier>
     </DefinedExecutionErrors>
-  </Property>
+  </Command>
+  <DataTypeDefinition>
+    <Identifier>ListInstrumentsInstrumentsGetParameters</Identifier>
+    <DisplayName>ListInstrumentsInstrumentsGetParameters Request Parameters</DisplayName>
+    <Description>Request parameters for ListInstrumentsInstrumentsGetParameters operation.</Description>
+    <DataType>
+      <Structure>
+        <Element>
+          <Identifier>QueryParameters</Identifier>
+          <DisplayName>Query Parameters</DisplayName>
+          <Description>The query parameters of the request.</Description>
+          <DataType>
+            <Structure>
+              <Element>
+                <Identifier>Limit</Identifier>
+                <DisplayName>Limit</DisplayName>
+                <Description>Limit parameter.</Description>
+                <DataType>
+                  <Basic>Integer</Basic>
+                </DataType>
+              </Element>
+              <Element>
+                <Identifier>Offset</Identifier>
+                <DisplayName>Offset</DisplayName>
+                <Description>Offset parameter.</Description>
+                <DataType>
+                  <Basic>Integer</Basic>
+                </DataType>
+              </Element>
+            </Structure>
+          </DataType>
+        </Element>
+      </Structure>
+    </DataType>
+  </DataTypeDefinition>
   <DataTypeDefinition>
     <Identifier>ResponseListInstrumentsInstrumentsGet</Identifier>
     <DisplayName>Response List Instruments Instruments  Get</DisplayName>

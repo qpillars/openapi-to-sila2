@@ -97,14 +97,15 @@ class InstrumentService:
 
         return instrument
 
-    def get_available_instruments(self) -> list[Instrument]:
+    def get_available_instruments(self, limit: int = 100, offset: int = 0) -> list[Instrument]:
         """Get all registered instruments
 
         Returns:
             List of instruments
         """
 
-        return list(_INSTRUMENTS.values())
+        instruments = list(_INSTRUMENTS.values())
+        return instruments[offset : offset + limit]
 
     def get_instrument_status(self, instrument_id: int) -> Instrument:
         """Get detailed status of an instrument

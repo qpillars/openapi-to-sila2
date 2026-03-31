@@ -9,11 +9,11 @@ import requests
 from dotenv import load_dotenv
 from sila2.server import MetadataDict
 
-from generated.observablefeature import ObservableFeatureBase
-from generated.observablefeature.types import MeasurementReading
+from generated.observablefeature import ObservableFeatureBase  # type: ignore
+from generated.observablefeature.types import MeasurementReading  # type: ignore
 
 if TYPE_CHECKING:
-    from proxy_server import Server
+    from proxy_server import Server  # type: ignore
 
 load_dotenv()
 

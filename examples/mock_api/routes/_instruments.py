@@ -23,6 +23,8 @@ def get_login_service() -> LoginService:
 
 @router.get("/", response_model=list[Instrument])
 def list_instruments(
+    limit: int = 100,
+    offset: int = 0,
     service: InstrumentService = Depends(get_instrument_service),
 ) -> list[Instrument]:
     """Get all registered laboratory instruments
@@ -31,7 +33,7 @@ def list_instruments(
         List of available instruments
     """
 
-    return service.get_available_instruments()
+    return service.get_available_instruments(limit=limit, offset=offset)
 
 
 @router.get("/{instrument_id}", response_model=Instrument)

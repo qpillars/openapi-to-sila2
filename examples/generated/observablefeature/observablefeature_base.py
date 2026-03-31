@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from sila2.server import FeatureImplementationBase, MetadataDict
 
-from .observablefeature_types import MeasurementReading
+from .types import MeasurementReading
 
 if TYPE_CHECKING:
     from typing import TypeVar

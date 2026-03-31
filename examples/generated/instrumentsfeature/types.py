@@ -1,5 +1,12 @@
+from typing import List
 from typing import NamedTuple
 
+class ListInstrumentsInstrumentsGetQueryParameters(NamedTuple):
+    Limit: int
+    Offset: int
+
+class ListInstrumentsInstrumentsGetParameters(NamedTuple):
+    QueryParameters: ListInstrumentsInstrumentsGetQueryParameters
 
 class ResponseListInstrumentsInstrumentsGet(NamedTuple):
     Name: str
@@ -13,14 +20,10 @@ class ResponseListInstrumentsInstrumentsGet(NamedTuple):
     NextMaintenance: str
     MeasurementCount: int
     Specifications: str
-
-
-DataType_ResponseListInstrumentsInstrumentsGet = list[ResponseListInstrumentsInstrumentsGet]
-
+DataType_ResponseListInstrumentsInstrumentsGet = List[ResponseListInstrumentsInstrumentsGet]
 
 class RegisterNewInstrumentInstrumentsPostHeaderParameters(NamedTuple):
     HTTPBearer: str
-
 
 class InstrumentCreate(NamedTuple):
     Name: str
@@ -30,11 +33,9 @@ class InstrumentCreate(NamedTuple):
     Year: int
     Specifications: str
 
-
 class RegisterNewInstrumentInstrumentsPostParameters(NamedTuple):
     HeaderParameters: RegisterNewInstrumentInstrumentsPostHeaderParameters
     RequestBody: InstrumentCreate
-
 
 class Instrument(NamedTuple):
     Name: str
@@ -49,60 +50,46 @@ class Instrument(NamedTuple):
     MeasurementCount: int
     Specifications: str
 
-
 class GetInstrumentStatusInstrumentsInstrumentIdGetPathParameters(NamedTuple):
     InstrumentId: int
-
 
 class GetInstrumentStatusInstrumentsInstrumentIdGetParameters(NamedTuple):
     PathParameters: GetInstrumentStatusInstrumentsInstrumentIdGetPathParameters
 
-
 class RetireInstrumentInstrumentsInstrumentIdDeletePathParameters(NamedTuple):
     InstrumentId: int
 
-
 class RetireInstrumentInstrumentsInstrumentIdDeleteHeaderParameters(NamedTuple):
     HTTPBearer: str
-
 
 class RetireInstrumentInstrumentsInstrumentIdDeleteParameters(NamedTuple):
     PathParameters: RetireInstrumentInstrumentsInstrumentIdDeletePathParameters
     HeaderParameters: RetireInstrumentInstrumentsInstrumentIdDeleteHeaderParameters
 
-
 class ResponseRetireInstrumentInstrumentsInstrumentIdDelete(NamedTuple):
     ResponseRetireInstrumentInstrumentsInstrumentIdDelete: int
-
 
 class CalibrateInstrumentInstrumentsInstrumentIdCalibratePostPathParameters(NamedTuple):
     InstrumentId: int
 
-
 class CalibrateInstrumentInstrumentsInstrumentIdCalibratePostHeaderParameters(NamedTuple):
     HTTPBearer: str
-
 
 class CalibrateInstrumentInstrumentsInstrumentIdCalibratePostParameters(NamedTuple):
     PathParameters: CalibrateInstrumentInstrumentsInstrumentIdCalibratePostPathParameters
     HeaderParameters: CalibrateInstrumentInstrumentsInstrumentIdCalibratePostHeaderParameters
 
+class ListInstrumentsInstrumentsGet_Responses(NamedTuple):
+    ResponseListInstrumentsInstrumentsGetResponse: DataType_ResponseListInstrumentsInstrumentsGet
 
 class RegisterNewInstrumentInstrumentsPost_Responses(NamedTuple):
     InstrumentResponse: Instrument
 
-
 class GetInstrumentStatusInstrumentsInstrumentIdGet_Responses(NamedTuple):
     InstrumentResponse: Instrument
-
 
 class RetireInstrumentInstrumentsInstrumentIdDelete_Responses(NamedTuple):
     ResponseRetireInstrumentInstrumentsInstrumentIdDeleteResponse: ResponseRetireInstrumentInstrumentsInstrumentIdDelete
 
-
 class CalibrateInstrumentInstrumentsInstrumentIdCalibratePost_Responses(NamedTuple):
     InstrumentResponse: Instrument
-
-
-class Get_ListInstrumentsInstrumentsGet_Responses(NamedTuple):
-    ListInstrumentsInstrumentsGet: DataType_ResponseListInstrumentsInstrumentsGet

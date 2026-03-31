@@ -56,17 +56,49 @@
                 "summary": "List Instruments",
                 "description": "Get all registered laboratory instruments\n\nReturns:\n    List of available instruments",
                 "operationId": "list_instruments_instruments__get",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 100,
+                            "title": "Limit"
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0,
+                            "title": "Offset"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful Response",
                         "content": {
                             "application/json": {
                                 "schema": {
+                                    "type": "array",
                                     "items": {
                                         "$ref": "#/components/schemas/Instrument"
                                     },
-                                    "type": "array",
                                     "title": "Response List Instruments Instruments  Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
                                 }
                             }
                         }
@@ -80,15 +112,20 @@
                 "summary": "Register New Instrument",
                 "description": "Register a new laboratory instrument (admin only)\n\nArgs:\n    payload: Instrument details\n    service: Instrument service instance\n    _: Login context\nReturns:\n    Created instrument",
                 "operationId": "register_new_instrument_instruments__post",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
                 "requestBody": {
+                    "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "$ref": "#/components/schemas/InstrumentCreate"
                             }
                         }
-                    },
-                    "required": true
+                    }
                 },
                 "responses": {
                     "201": {
@@ -111,12 +148,7 @@
                             }
                         }
                     }
-                },
-                "security": [
-                    {
-                        "HTTPBearer": []
-                    }
-                ]
+                }
             }
         },
         "/instruments/{instrument_id}": {

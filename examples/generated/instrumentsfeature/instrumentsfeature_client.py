@@ -9,19 +9,22 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
 
-    from instrumentsfeature_types import (
+    from typing import Iterable, Optional
+
+    from examples.generated.instrumentsfeature.types import (
         CalibrateInstrumentInstrumentsInstrumentIdCalibratePost_Responses,
         GetInstrumentStatusInstrumentsInstrumentIdGet_Responses,
+        ListInstrumentsInstrumentsGet_Responses,
         RegisterNewInstrumentInstrumentsPost_Responses,
         RetireInstrumentInstrumentsInstrumentIdDelete_Responses,
     )
-    from sila2.client import ClientMetadataInstance, ClientUnobservableProperty
+    from sila2.client import ClientMetadataInstance
 
-    from .instrumentsfeature_types import (
+    from .types import (
         CalibrateInstrumentInstrumentsInstrumentIdCalibratePostParameters,
         GetInstrumentStatusInstrumentsInstrumentIdGetParameters,
+        ListInstrumentsInstrumentsGetParameters,
         RegisterNewInstrumentInstrumentsPostParameters,
         RetireInstrumentInstrumentsInstrumentIdDeleteParameters,
     )
@@ -32,19 +35,25 @@ class InstrumentsFeatureClient:
     No description provided.
     """
 
-    ListInstrumentsInstrumentsGet: ClientUnobservableProperty[ResponseListInstrumentsInstrumentsGet]
-    """
-    Get all registered laboratory instruments
+    def ListInstrumentsInstrumentsGet(
+        self,
+        RequestParameters: ListInstrumentsInstrumentsGetParameters,
+        *,
+        metadata: Optional[Iterable[ClientMetadataInstance]] = None,
+    ) -> ListInstrumentsInstrumentsGet_Responses:
+        """
+                Get all registered laboratory instruments
 
-Returns:
-    List of available instruments
-    """
+        Returns:
+            List of available instruments
+        """
+        ...
 
     def RegisterNewInstrumentInstrumentsPost(
         self,
         RequestParameters: RegisterNewInstrumentInstrumentsPostParameters,
         *,
-        metadata: Iterable[ClientMetadataInstance] | None = None,
+        metadata: Optional[Iterable[ClientMetadataInstance]] = None,
     ) -> RegisterNewInstrumentInstrumentsPost_Responses:
         """
                 Register a new laboratory instrument (admin only)
@@ -62,7 +71,7 @@ Returns:
         self,
         RequestParameters: GetInstrumentStatusInstrumentsInstrumentIdGetParameters,
         *,
-        metadata: Iterable[ClientMetadataInstance] | None = None,
+        metadata: Optional[Iterable[ClientMetadataInstance]] = None,
     ) -> GetInstrumentStatusInstrumentsInstrumentIdGet_Responses:
         """
                 Get detailed status of an instrument
@@ -79,7 +88,7 @@ Returns:
         self,
         RequestParameters: RetireInstrumentInstrumentsInstrumentIdDeleteParameters,
         *,
-        metadata: Iterable[ClientMetadataInstance] | None = None,
+        metadata: Optional[Iterable[ClientMetadataInstance]] = None,
     ) -> RetireInstrumentInstrumentsInstrumentIdDelete_Responses:
         """
                 Retire/delete an instrument from service (admin only)
@@ -97,7 +106,7 @@ Returns:
         self,
         RequestParameters: CalibrateInstrumentInstrumentsInstrumentIdCalibratePostParameters,
         *,
-        metadata: Iterable[ClientMetadataInstance] | None = None,
+        metadata: Optional[Iterable[ClientMetadataInstance]] = None,
     ) -> CalibrateInstrumentInstrumentsInstrumentIdCalibratePost_Responses:
         """
                 Calibrate an instrument (admin only)

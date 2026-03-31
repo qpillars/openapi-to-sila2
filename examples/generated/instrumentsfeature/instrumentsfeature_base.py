@@ -6,19 +6,21 @@ from typing import TYPE_CHECKING
 
 from sila2.server import FeatureImplementationBase, MetadataDict
 
-from .instrumentsfeature_types import (
+from .types import (
     CalibrateInstrumentInstrumentsInstrumentIdCalibratePost_Responses,
     CalibrateInstrumentInstrumentsInstrumentIdCalibratePostParameters,
     GetInstrumentStatusInstrumentsInstrumentIdGet_Responses,
     GetInstrumentStatusInstrumentsInstrumentIdGetParameters,
+    ListInstrumentsInstrumentsGet_Responses,
+    ListInstrumentsInstrumentsGetParameters,
     RegisterNewInstrumentInstrumentsPost_Responses,
     RegisterNewInstrumentInstrumentsPostParameters,
-    ResponseListInstrumentsInstrumentsGet,
     RetireInstrumentInstrumentsInstrumentIdDelete_Responses,
     RetireInstrumentInstrumentsInstrumentIdDeleteParameters,
 )
 
 if TYPE_CHECKING:
+
     from typing import TypeVar
 
     from sila2.server import SilaServer
@@ -36,18 +38,25 @@ class InstrumentsFeatureBase(FeatureImplementationBase, ABC):
         super().__init__(parent_server=parent_server)
 
     @abstractmethod
-    def get_ListInstrumentsInstrumentsGet(self, *, metadata: MetadataDict) -> ResponseListInstrumentsInstrumentsGet:
+    def ListInstrumentsInstrumentsGet(
+        self, RequestParameters: ListInstrumentsInstrumentsGetParameters, *, metadata: MetadataDict
+    ) -> ListInstrumentsInstrumentsGet_Responses:
         """
                 Get all registered laboratory instruments
 
         Returns:
             List of available instruments
 
-                :param metadata: The SiLA Client Metadata attached to the call
-                :return: Get all registered laboratory instruments
 
-        Returns:
-            List of available instruments
+                :param RequestParameters: The parameters and payload of the request.
+
+                :param metadata: The SiLA Client Metadata attached to the call
+
+                :return:
+
+                    - ResponseListInstrumentsInstrumentsGetResponse: Response containing the Response List Instruments Instruments  Get.
+
+
         """
 
     @abstractmethod

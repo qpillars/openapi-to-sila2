@@ -7,15 +7,15 @@ from sila2.server import SilaServer
 # Add examples directory to path to enable absolute imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from feature_implementations.authenticationfeature_impl import AuthenticationFeatureImpl
-
-# from feature_implementations.instrumentsfeature_impl import InstrumentsFeatureImpl
-from feature_implementations.observablefeature_impl import ObservableFeatureImpl
+from feature_implementations.authenticationfeature_impl import AuthenticationFeatureImpl  # type: ignore
+from feature_implementations.instrumentsfeature_impl import InstrumentsFeatureImpl  # type: ignore
+from feature_implementations.observablefeature_impl import ObservableFeatureImpl  # type: ignore
 
 # This import registers the generated features base classes
 # The files are generated during the build process by the sila2-codegen tool
-from generated.authenticationfeature import AuthenticationFeatureFeature
-from generated.observablefeature import ObservableFeatureFeature
+from generated.authenticationfeature import AuthenticationFeatureFeature  # type: ignore
+from generated.instrumentsfeature import InstrumentsFeatureFeature  # type: ignore
+from generated.observablefeature import ObservableFeatureFeature  # type: ignore
 
 
 class Server(SilaServer):
@@ -41,8 +41,8 @@ class Server(SilaServer):
         self.authenticationfeature = AuthenticationFeatureImpl(self)
         self.set_feature_implementation(AuthenticationFeatureFeature, self.authenticationfeature)
 
-        # self.instrumentsfeature = InstrumentsFeatureImpl(self)
-        # self.set_feature_implementation(InstrumentsFeatureFeature, self.instrumentsfeature)
+        self.instrumentsfeature = InstrumentsFeatureImpl(self)
+        self.set_feature_implementation(InstrumentsFeatureFeature, self.instrumentsfeature)
 
         self.observablefeature = ObservableFeatureImpl(self)
         self.set_feature_implementation(ObservableFeatureFeature, self.observablefeature)

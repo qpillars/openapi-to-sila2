@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # This import registers all the generated features, errors, types, etc.
 # The files are generated during the build process by the sila2-codegen tool
-from generated import (
+from generated import (  # type: ignore
     authenticationfeature,
     instrumentsfeature,
     observablefeature,
@@ -26,7 +26,7 @@ class Client(SilaClient):
     _expected_features: set[FullyQualifiedFeatureIdentifier] = {
         FullyQualifiedFeatureIdentifier("org.silastandard/core/SiLAService/v1"),
         FullyQualifiedFeatureIdentifier("org.silastandard/generator/AuthenticationFeature/v1"),
-        # FullyQualifiedFeatureIdentifier("org.silastandard/generator/InstrumentsFeature/v1"),
+        FullyQualifiedFeatureIdentifier("org.silastandard/generator/InstrumentsFeature/v1"),
         FullyQualifiedFeatureIdentifier("org.silastandard/generator/ObservableFeature/v1"),
     }
 

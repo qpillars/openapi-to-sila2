@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from sila2.server import FeatureImplementationBase, MetadataDict
 
-from .authenticationfeature_types import LoginLoginPost_Responses, LoginLoginPostParameters
+from .types import LoginLoginPost_Responses, LoginLoginPostParameters
 
 if TYPE_CHECKING:
     from typing import TypeVar

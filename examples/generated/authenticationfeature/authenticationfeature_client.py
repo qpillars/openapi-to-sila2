@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from authenticationfeature_types import LoginLoginPost_Responses
     from sila2.client import ClientMetadataInstance
 
-    from .authenticationfeature_types import LoginLoginPostParameters
+    from .types import LoginLoginPostParameters
 
 
 class AuthenticationFeatureClient:

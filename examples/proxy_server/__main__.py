@@ -5,7 +5,7 @@ from pathlib import Path
 from uuid import UUID
 
 import typer
-from server import Server
+from server import Server  # type: ignore
 from sila2.framework.utils import running_in_docker
 from typer import BadParameter, Option
 
