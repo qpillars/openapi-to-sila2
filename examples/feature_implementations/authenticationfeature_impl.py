@@ -6,11 +6,11 @@ from sila2.server import MetadataDict
 
 # This import registers all the generated features, errors, types, etc.
 # The files are generated during the build process by the sila2-codegen tool
-from generated.authenticationfeature import (  # type: ignore
+from generated.authenticationfeature import (
     AuthenticationError,
     AuthenticationFeatureBase,
 )
-from generated.authenticationfeature.types import (  # type: ignore
+from generated.authenticationfeature.types import (
     LoginLoginPost_Responses,
     LoginLoginPostParameters,
     LoginResponse,

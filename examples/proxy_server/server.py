@@ -7,15 +7,15 @@ from sila2.server import SilaServer
 # Add examples directory to path to enable absolute imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from feature_implementations.authenticationfeature_impl import AuthenticationFeatureImpl  # type: ignore
-from feature_implementations.instrumentsfeature_impl import InstrumentsFeatureImpl  # type: ignore
-from feature_implementations.observablefeature_impl import ObservableFeatureImpl  # type: ignore
+from feature_implementations.authenticationfeature_impl import AuthenticationFeatureImpl
+from feature_implementations.instrumentsfeature_impl import InstrumentsFeatureImpl
+from feature_implementations.observablefeature_impl import ObservableFeatureImpl
 
 # This import registers the generated features base classes
 # The files are generated during the build process by the sila2-codegen tool
-from generated.authenticationfeature import AuthenticationFeatureFeature  # type: ignore
-from generated.instrumentsfeature import InstrumentsFeatureFeature  # type: ignore
-from generated.observablefeature import ObservableFeatureFeature  # type: ignore
+from generated.authenticationfeature import AuthenticationFeatureFeature
+from generated.instrumentsfeature import InstrumentsFeatureFeature
+from generated.observablefeature import ObservableFeatureFeature
 
 
 class Server(SilaServer):

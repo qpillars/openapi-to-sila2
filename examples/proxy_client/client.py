@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # This import registers all the generated features, errors, types, etc.
 # The files are generated during the build process by the sila2-codegen tool
-from generated import (  # type: ignore
+from generated import (
     authenticationfeature,
     instrumentsfeature,
     observablefeature,

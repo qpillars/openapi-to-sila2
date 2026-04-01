@@ -6,11 +6,11 @@ from sila2.server import MetadataDict
 
 # This import registers all the generated features, errors, types, etc.
 # The files are generated during the build process by the sila2-codegen tool
-from generated.instrumentsfeature import (  # type: ignore
+from generated.instrumentsfeature import (
     InstrumentsError,
     InstrumentsFeatureBase,
 )
-from generated.instrumentsfeature.types import (  # type: ignore
+from generated.instrumentsfeature.types import (
     CalibrateInstrumentInstrumentsInstrumentIdCalibratePost_Responses,
     CalibrateInstrumentInstrumentsInstrumentIdCalibratePostParameters,
     GetInstrumentStatusInstrumentsInstrumentIdGet_Responses,
@@ -168,7 +168,7 @@ class InstrumentsFeatureImpl(InstrumentsFeatureBase):
             response.raise_for_status()
 
             return RetireInstrumentInstrumentsInstrumentIdDelete_Responses(
-                ResponseRetireInstrumentInstrumentsInstrumentIdDeleteResponse=instrument_id
+                ResponseRetireInstrumentInstrumentsInstrumentIdDeleteResponse=instrument_id  # type: ignore
             )
         except Exception as e:
             raise InstrumentsError(f"Instrument retirement error: {e}")

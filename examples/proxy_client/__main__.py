@@ -8,11 +8,11 @@ import json
 
 from client import Client  # type: ignore
 
-from generated.authenticationfeature.types import (  # type: ignore
+from generated.authenticationfeature.types import (
     LoginLoginPostParameters,
     LoginRequest,
 )
-from generated.instrumentsfeature.types import (  # type: ignore
+from generated.instrumentsfeature.types import (
     CalibrateInstrumentInstrumentsInstrumentIdCalibratePostHeaderParameters,
     CalibrateInstrumentInstrumentsInstrumentIdCalibratePostParameters,
     CalibrateInstrumentInstrumentsInstrumentIdCalibratePostPathParameters,
