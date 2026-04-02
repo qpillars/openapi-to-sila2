@@ -35,7 +35,7 @@ def _run_codegen(output_dir: Path) -> None:
         for feature_file in output_dir.glob("*.xml"):
             typer.echo(f"  Processing: {feature_file.name}")
 
-            subprocess.run(
+            result = subprocess.run(
                 [
                     "sila2-codegen",
                     "generate-feature-files",
@@ -44,10 +44,24 @@ def _run_codegen(output_dir: Path) -> None:
                     "-o",
                     str(output_dir),
                 ],
-                check=True,
+                check=False,
                 capture_output=True,
                 text=True,
             )
+
+            if result.returncode != 0:
+                typer.echo(
+                    f"❌ Code generation failed for {feature_file.name}:",
+                    err=True,
+                )
+
+                if result.stdout:
+                    typer.echo(f"   stdout: {result.stdout}", err=True)
+
+                if result.stderr:
+                    typer.echo(f"   stderr: {result.stderr}", err=True)
+
+                raise typer.Exit(code=2)
 
         typer.echo("✅ Code generation completed successfully")
 
@@ -57,17 +71,6 @@ def _run_codegen(output_dir: Path) -> None:
             err=True,
         )
         raise typer.Exit(code=1)
-
-    except subprocess.CalledProcessError as e:
-        typer.echo(
-            f"❌ Code generation failed for {feature_file.name}:",
-            err=True,
-        )
-
-        if e.stderr:
-            typer.echo(f"   {e.stderr}", err=True)
-
-        raise typer.Exit(code=2)
 
     except Exception as e:
         typer.echo("❌ Unexpected error during code generation:", err=True)

@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+import "SiLAFramework.proto";
+
+package sila2.org.silastandard.generator.authenticationfeature.v1;
+
+/* No description provided. */
+service AuthenticationFeature {
+  /* Authenticate and receive JWT token Args: request: Login credentials service: Login service instance Returns: JWT access token */
+  rpc LoginLoginPost (sila2.org.silastandard.generator.authenticationfeature.v1.LoginLoginPost_Parameters) returns (sila2.org.silastandard.generator.authenticationfeature.v1.LoginLoginPost_Responses) {}
+}
+
+/* Request parameters for LoginLoginPostParameters operation. */
+message DataType_LoginLoginPostParameters {
+  message LoginLoginPostParameters_Struct {
+    sila2.org.silastandard.generator.authenticationfeature.v1.DataType_LoginRequest RequestBody = 1;  /* The body of the request. */
+  }
+  sila2.org.silastandard.generator.authenticationfeature.v1.DataType_LoginLoginPostParameters.LoginLoginPostParameters_Struct LoginLoginPostParameters = 1;  /* Request parameters for LoginLoginPostParameters operation. */
+}
+
+/* Login request model */
+message DataType_LoginRequest {
+  message LoginRequest_Struct {
+    sila2.org.silastandard.String Username = 1;  /* Username field. */
+  }
+  sila2.org.silastandard.generator.authenticationfeature.v1.DataType_LoginRequest.LoginRequest_Struct LoginRequest = 1;  /* Login request model */
+}
+
+/* Login response model */
+message DataType_LoginResponse {
+  message LoginResponse_Struct {
+    sila2.org.silastandard.String AccessToken = 1;  /* Access_token field. */
+    sila2.org.silastandard.String TokenType = 2;  /* Token_type field. */
+  }
+  sila2.org.silastandard.generator.authenticationfeature.v1.DataType_LoginResponse.LoginResponse_Struct LoginResponse = 1;  /* Login response model */
+}
+
+/* Parameters for LoginLoginPost */
+message LoginLoginPost_Parameters {
+  sila2.org.silastandard.generator.authenticationfeature.v1.DataType_LoginLoginPostParameters RequestParameters = 1;  /* The parameters and payload of the request. */
+}
+
+/* Responses of LoginLoginPost */
+message LoginLoginPost_Responses {
+  sila2.org.silastandard.generator.authenticationfeature.v1.DataType_LoginResponse LoginResponseResponse = 1;  /* Response containing the LoginResponse. */
+}

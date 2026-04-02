@@ -1,0 +1,102 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Feature xmlns="http://www.sila-standard.org" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" SiLA2Version="1.0" FeatureVersion="1.0" Originator="org.silastandard" Category="generator" xsi:schemaLocation="http://www.sila-standard.org https://gitlab.com/SiLA2/sila_base/raw/master/schema/FeatureDefinition.xsd">
+  <Identifier>AuthenticationFeature</Identifier>
+  <DisplayName>Authentication Feature</DisplayName>
+  <Description>No description provided.</Description>
+  <DefinedExecutionError>
+    <Identifier>AuthenticationError</Identifier>
+    <DisplayName>Authentication Error</DisplayName>
+    <Description>Generic error for the feature.</Description>
+  </DefinedExecutionError>
+  <Command>
+    <Identifier>LoginLoginPost</Identifier>
+    <DisplayName>Login</DisplayName>
+    <Description>Authenticate and receive JWT token
+
+Args:
+    request: Login credentials
+    service: Login service instance
+
+Returns:
+    JWT access token</Description>
+    <Observable>No</Observable>
+    <Parameter>
+      <Identifier>RequestParameters</Identifier>
+      <DisplayName>Request Parameters</DisplayName>
+      <Description>The parameters and payload of the request.</Description>
+      <DataType>
+        <DataTypeIdentifier>LoginLoginPostParameters</DataTypeIdentifier>
+      </DataType>
+    </Parameter>
+    <Response>
+      <Identifier>LoginResponseResponse</Identifier>
+      <DisplayName>LoginResponse Response</DisplayName>
+      <Description>Response containing the LoginResponse.</Description>
+      <DataType>
+        <DataTypeIdentifier>LoginResponse</DataTypeIdentifier>
+      </DataType>
+    </Response>
+    <DefinedExecutionErrors>
+      <Identifier>AuthenticationError</Identifier>
+    </DefinedExecutionErrors>
+  </Command>
+  <DataTypeDefinition>
+    <Identifier>LoginLoginPostParameters</Identifier>
+    <DisplayName>LoginLoginPostParameters Request Parameters</DisplayName>
+    <Description>Request parameters for LoginLoginPostParameters operation.</Description>
+    <DataType>
+      <Structure>
+        <Element>
+          <Identifier>RequestBody</Identifier>
+          <DisplayName>Request Body</DisplayName>
+          <Description>The body of the request.</Description>
+          <DataType>
+            <DataTypeIdentifier>LoginRequest</DataTypeIdentifier>
+          </DataType>
+        </Element>
+      </Structure>
+    </DataType>
+  </DataTypeDefinition>
+  <DataTypeDefinition>
+    <Identifier>LoginRequest</Identifier>
+    <DisplayName>LoginRequest</DisplayName>
+    <Description>Login request model</Description>
+    <DataType>
+      <Structure>
+        <Element>
+          <Identifier>Username</Identifier>
+          <DisplayName>Username</DisplayName>
+          <Description>Username field.</Description>
+          <DataType>
+            <Basic>String</Basic>
+          </DataType>
+        </Element>
+      </Structure>
+    </DataType>
+  </DataTypeDefinition>
+  <DataTypeDefinition>
+    <Identifier>LoginResponse</Identifier>
+    <DisplayName>LoginResponse</DisplayName>
+    <Description>Login response model</Description>
+    <DataType>
+      <Structure>
+        <Element>
+          <Identifier>AccessToken</Identifier>
+          <DisplayName>Access_token</DisplayName>
+          <Description>Access_token field.</Description>
+          <DataType>
+            <Basic>String</Basic>
+          </DataType>
+        </Element>
+        <Element>
+          <Identifier>TokenType</Identifier>
+          <DisplayName>Token_type</DisplayName>
+          <Description>Token_type field.</Description>
+          <DataType>
+            <Basic>String</Basic>
+          </DataType>
+        </Element>
+      </Structure>
+    </DataType>
+  </DataTypeDefinition>
+</Feature>

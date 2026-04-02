@@ -1,0 +1,662 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Mock Laboratory API",
+        "description": "Mock laboratory instrument and measurement API for SiLA2 conversion examples",
+        "version": "0.1.0"
+    },
+    "paths": {
+        "/login/": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Login",
+                "description": "Authenticate and receive JWT token\n\nArgs:\n    request: Login credentials\n    service: Login service instance\n\nReturns:\n    JWT access token",
+                "operationId": "login_login__post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LoginRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LoginResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/instruments/": {
+            "get": {
+                "tags": [
+                    "Instruments"
+                ],
+                "summary": "List Instruments",
+                "description": "Get all registered laboratory instruments\n\nReturns:\n    List of available instruments",
+                "operationId": "list_instruments_instruments__get",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 100,
+                            "title": "Limit"
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0,
+                            "title": "Offset"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Instrument"
+                                    },
+                                    "title": "Response List Instruments Instruments  Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Instruments"
+                ],
+                "summary": "Register New Instrument",
+                "description": "Register a new laboratory instrument (admin only)\n\nArgs:\n    payload: Instrument details\n    service: Instrument service instance\n    _: Login context\nReturns:\n    Created instrument",
+                "operationId": "register_new_instrument_instruments__post",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/InstrumentCreate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Instrument"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/instruments/{instrument_id}": {
+            "get": {
+                "tags": [
+                    "Instruments"
+                ],
+                "summary": "Get Instrument Status",
+                "description": "Get detailed status of an instrument\n\nArgs:\n    instrument_id: ID of the instrument\n\nReturns:\n    Instrument status with state and metadata",
+                "operationId": "get_instrument_status_instruments__instrument_id__get",
+                "parameters": [
+                    {
+                        "name": "instrument_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Instrument Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Instrument"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Instruments"
+                ],
+                "summary": "Retire Instrument",
+                "description": "Retire/delete an instrument from service (admin only)\n\nArgs:\n    instrument_id: ID of instrument to retire\n    service: Instrument service instance\n    _: Login context\nReturns:\n    Retired instrument ID",
+                "operationId": "retire_instrument_instruments__instrument_id__delete",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "instrument_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Instrument Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "integer",
+                                    "title": "Response Retire Instrument Instruments  Instrument Id  Delete"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/instruments/{instrument_id}/calibrate": {
+            "post": {
+                "tags": [
+                    "Instruments"
+                ],
+                "summary": "Calibrate Instrument",
+                "description": "Calibrate an instrument (admin only)\n\nUpdates calibration timestamp and schedules next maintenance.\n\nArgs:\n    instrument_id: ID of instrument to calibrate\n    service: Instrument service instance\n    _: Login context\nReturns:\n    Updated instrument with new calibration timestamp",
+                "operationId": "calibrate_instrument_instruments__instrument_id__calibrate_post",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "instrument_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Instrument Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Instrument"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/observable/measurements": {
+            "get": {
+                "tags": [
+                    "Observable"
+                ],
+                "summary": "Stream Measurements",
+                "description": "Stream real-time measurements from all instruments\n\nServer-Sent Events stream of latest measurements across all instruments.\n\nArgs:\n    service: Instrument service instance\n\nReturns:\n    StreamingResponse with JSON-encoded measurements",
+                "operationId": "stream_measurements_observable_measurements_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MeasurementReading"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "summary": "Health Check",
+                "description": "Health check endpoint\n\nReturns:\n    Status information",
+                "operationId": "health_check_health_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "HTTPValidationError": {
+                "properties": {
+                    "detail": {
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        },
+                        "type": "array",
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "title": "HTTPValidationError"
+            },
+            "Instrument": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 100,
+                        "minLength": 1,
+                        "title": "Name",
+                        "description": "Name of the instrument"
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/InstrumentType",
+                        "description": "Type of laboratory instrument"
+                    },
+                    "manufacturer": {
+                        "type": "string",
+                        "maxLength": 100,
+                        "minLength": 1,
+                        "title": "Manufacturer",
+                        "description": "Instrument manufacturer"
+                    },
+                    "model": {
+                        "type": "string",
+                        "maxLength": 100,
+                        "minLength": 1,
+                        "title": "Model",
+                        "description": "Instrument model number"
+                    },
+                    "year": {
+                        "type": "integer",
+                        "maximum": 2100.0,
+                        "minimum": 1900.0,
+                        "title": "Year",
+                        "description": "Year of manufacture"
+                    },
+                    "id": {
+                        "type": "integer",
+                        "title": "Id",
+                        "description": "Unique instrument identifier"
+                    },
+                    "state": {
+                        "$ref": "#/components/schemas/InstrumentState",
+                        "description": "Current state of the instrument",
+                        "default": "idle"
+                    },
+                    "last_calibration": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Last Calibration",
+                        "description": "Timestamp of last calibration"
+                    },
+                    "next_maintenance": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Next Maintenance",
+                        "description": "Scheduled maintenance date"
+                    },
+                    "measurement_count": {
+                        "type": "integer",
+                        "title": "Measurement Count",
+                        "description": "Total number of measurements recorded",
+                        "default": 0
+                    },
+                    "specifications": {
+                        "additionalProperties": true,
+                        "type": "object",
+                        "title": "Specifications",
+                        "description": "Technical specifications"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name",
+                    "type",
+                    "manufacturer",
+                    "model",
+                    "year",
+                    "id"
+                ],
+                "title": "Instrument",
+                "description": "Full instrument model with runtime state"
+            },
+            "InstrumentCreate": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 100,
+                        "minLength": 1,
+                        "title": "Name",
+                        "description": "Name of the instrument"
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/InstrumentType",
+                        "description": "Type of laboratory instrument"
+                    },
+                    "manufacturer": {
+                        "type": "string",
+                        "maxLength": 100,
+                        "minLength": 1,
+                        "title": "Manufacturer",
+                        "description": "Instrument manufacturer"
+                    },
+                    "model": {
+                        "type": "string",
+                        "maxLength": 100,
+                        "minLength": 1,
+                        "title": "Model",
+                        "description": "Instrument model number"
+                    },
+                    "year": {
+                        "type": "integer",
+                        "maximum": 2100.0,
+                        "minimum": 1900.0,
+                        "title": "Year",
+                        "description": "Year of manufacture"
+                    },
+                    "specifications": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Specifications",
+                        "description": "Optional technical specifications"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name",
+                    "type",
+                    "manufacturer",
+                    "model",
+                    "year"
+                ],
+                "title": "InstrumentCreate",
+                "description": "Model for creating new instruments"
+            },
+            "InstrumentState": {
+                "type": "string",
+                "enum": [
+                    "idle",
+                    "calibrating",
+                    "running",
+                    "maintenance",
+                    "error"
+                ],
+                "title": "InstrumentState",
+                "description": "State of an instrument"
+            },
+            "InstrumentType": {
+                "type": "string",
+                "enum": [
+                    "microscope",
+                    "centrifuge",
+                    "spectrometer",
+                    "balance"
+                ],
+                "title": "InstrumentType",
+                "description": "Laboratory instrument types"
+            },
+            "LoginRequest": {
+                "properties": {
+                    "username": {
+                        "type": "string",
+                        "title": "Username",
+                        "default": "admin"
+                    }
+                },
+                "type": "object",
+                "title": "LoginRequest",
+                "description": "Login request model"
+            },
+            "LoginResponse": {
+                "properties": {
+                    "access_token": {
+                        "type": "string",
+                        "title": "Access Token"
+                    },
+                    "token_type": {
+                        "type": "string",
+                        "title": "Token Type",
+                        "default": "bearer"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "access_token"
+                ],
+                "title": "LoginResponse",
+                "description": "Login response model"
+            },
+            "MeasurementReading": {
+                "properties": {
+                    "instrument_id": {
+                        "type": "integer",
+                        "title": "Instrument Id",
+                        "description": "Source instrument ID"
+                    },
+                    "instrument_name": {
+                        "type": "string",
+                        "title": "Instrument Name",
+                        "description": "Source instrument name"
+                    },
+                    "value": {
+                        "type": "number",
+                        "title": "Value",
+                        "description": "Current measurement value"
+                    },
+                    "unit": {
+                        "type": "string",
+                        "title": "Unit",
+                        "description": "Unit of measurement"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Timestamp",
+                        "description": "Reading timestamp"
+                    },
+                    "status": {
+                        "type": "string",
+                        "title": "Status",
+                        "description": "Measurement status (ok, warning, error)",
+                        "default": "ok"
+                    },
+                    "metadata": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Metadata",
+                        "description": "Optional additional data"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "instrument_id",
+                    "instrument_name",
+                    "value",
+                    "unit",
+                    "timestamp"
+                ],
+                "title": "MeasurementReading",
+                "description": "Real-time measurement reading for streaming"
+            },
+            "ValidationError": {
+                "properties": {
+                    "loc": {
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        },
+                        "type": "array",
+                        "title": "Location"
+                    },
+                    "msg": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Error Type"
+                    },
+                    "input": {
+                        "title": "Input"
+                    },
+                    "ctx": {
+                        "type": "object",
+                        "title": "Context"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "title": "ValidationError"
+            }
+        },
+        "securitySchemes": {
+            "HTTPBearer": {
+                "type": "http",
+                "scheme": "bearer"
+            }
+        }
+    }
+}
