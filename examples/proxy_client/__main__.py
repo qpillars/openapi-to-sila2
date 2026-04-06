@@ -5,6 +5,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import json
+import logging
 
 from client import Client  # type: ignore
 
@@ -28,19 +29,22 @@ from generated.instrumentsfeature.types import (
     RetireInstrumentInstrumentsInstrumentIdDeletePathParameters,
 )
 
+logger = logging.getLogger(__name__)
+
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s\n")
+
 
 def main():
     try:
         client = Client.discover(server_name="QPillars Server")
-        print(client._features)
-        print()
+        logger.info("Available features: %s", client._features)
 
         subscription = client.ObservableFeature.StreamMeasurementsObservableMeasurementsGet.subscribe()
 
         counter = 0
 
         for update in subscription:
-            print(f"Received update: {update}")
+            logger.info("Received update: %s", update)
 
             counter += 1
 
@@ -51,7 +55,7 @@ def main():
             RequestParameters=LoginLoginPostParameters(RequestBody=LoginRequest(Username="admin"))
         ).LoginResponseResponse.AccessToken
 
-        print(f"Received security token: {security_token}\n")
+        logger.info("Received security token: %s", security_token)
 
         new_instrument = client.InstrumentsFeature.RegisterNewInstrumentInstrumentsPost(
             RequestParameters=RegisterNewInstrumentInstrumentsPostParameters(
@@ -67,9 +71,10 @@ def main():
             )
         ).InstrumentResponse
 
-        print(f"Created new instrument: {new_instrument}\n")
+        logger.info("Created new instrument: %s", new_instrument)
 
-        print(
+        logger.info(
+            "All instruments: %s",
             client.InstrumentsFeature.ListInstrumentsInstrumentsGet(
                 RequestParameters=ListInstrumentsInstrumentsGetParameters(
                     QueryParameters=ListInstrumentsInstrumentsGetQueryParameters(
@@ -77,20 +82,19 @@ def main():
                         Offset=0,
                     )
                 )
-            ).ResponseListInstrumentsInstrumentsGetResponse
+            ).ResponseListInstrumentsInstrumentsGetResponse,
         )
-        print()
 
-        print(
+        logger.info(
+            "Instrument status: %s",
             client.InstrumentsFeature.GetInstrumentStatusInstrumentsInstrumentIdGet(
                 RequestParameters=GetInstrumentStatusInstrumentsInstrumentIdGetParameters(
                     PathParameters=GetInstrumentStatusInstrumentsInstrumentIdGetPathParameters(
                         InstrumentId=new_instrument.Id
                     )
                 )
-            ).InstrumentResponse
+            ).InstrumentResponse,
         )
-        print()
 
         calibrated_instrument = client.InstrumentsFeature.CalibrateInstrumentInstrumentsInstrumentIdCalibratePost(
             RequestParameters=CalibrateInstrumentInstrumentsInstrumentIdCalibratePostParameters(
@@ -103,9 +107,10 @@ def main():
             )
         ).InstrumentResponse
 
-        print(f"Calibrated instrument: {calibrated_instrument}\n")
+        logger.info("Calibrated instrument: %s", calibrated_instrument)
 
-        print(
+        logger.info(
+            "Retiring instrument: %s",
             client.InstrumentsFeature.RetireInstrumentInstrumentsInstrumentIdDelete(
                 RequestParameters=RetireInstrumentInstrumentsInstrumentIdDeleteParameters(
                     HeaderParameters=RetireInstrumentInstrumentsInstrumentIdDeleteHeaderParameters(
@@ -115,13 +120,13 @@ def main():
                         InstrumentId=new_instrument.Id
                     ),
                 )
-            ).ResponseRetireInstrumentInstrumentsInstrumentIdDeleteResponse
+            ).ResponseRetireInstrumentInstrumentsInstrumentIdDeleteResponse,
         )
 
-        print(f"Retired instrument with ID: {new_instrument.Id}\n")
+        logger.info("Retired instrument with ID: %s", new_instrument.Id)
 
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logger.error("An error occurred: %s", e)
         return
 
 
