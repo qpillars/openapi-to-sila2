@@ -13,13 +13,13 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       
       - name: Install just
-        uses: extractions/setup-just@v2
+        uses: extractions/setup-just@v3
       
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
           cache-dependency-glob: "**/pyproject.toml"
@@ -36,23 +36,26 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       
       - name: Install just
-        uses: extractions/setup-just@v2
+        uses: extractions/setup-just@v3
       
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
           cache-dependency-glob: "**/pyproject.toml"
           prune-cache: false
       
       - name: Set up Python
-        run: uv python install 3.10
+        run: uv python install ${{ matrix.python-version }}
       
       - name: Install dependencies
         run: just install
