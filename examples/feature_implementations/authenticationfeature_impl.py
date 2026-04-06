@@ -57,4 +57,4 @@ class AuthenticationFeatureImpl(AuthenticationFeatureBase):
                 )
             )
         except Exception as e:
-            raise AuthenticationError(f"Authentication error: {e}")
+            raise AuthenticationError(f"Authentication error: {e}") from e

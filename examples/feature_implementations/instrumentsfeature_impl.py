@@ -73,7 +73,7 @@ class InstrumentsFeatureImpl(InstrumentsFeatureBase):
                 ]
             )
         except Exception as e:
-            raise InstrumentsError(f"Instrument listing error: {e}")
+            raise InstrumentsError(f"Instrument listing error: {e}") from e
 
     def RegisterNewInstrumentInstrumentsPost(
         self, RequestParameters: RegisterNewInstrumentInstrumentsPostParameters, *, metadata: MetadataDict
@@ -118,7 +118,7 @@ class InstrumentsFeatureImpl(InstrumentsFeatureBase):
                 )
             )
         except Exception as e:
-            raise InstrumentsError(f"Instrument registration error: {e}")
+            raise InstrumentsError(f"Instrument registration error: {e}") from e
 
     def GetInstrumentStatusInstrumentsInstrumentIdGet(
         self, RequestParameters: GetInstrumentStatusInstrumentsInstrumentIdGetParameters, *, metadata: MetadataDict
@@ -151,7 +151,7 @@ class InstrumentsFeatureImpl(InstrumentsFeatureBase):
                 )
             )
         except Exception as e:
-            raise InstrumentsError(f"Instrument retrieval error: {e}")
+            raise InstrumentsError(f"Instrument retrieval error: {e}") from e
 
     def RetireInstrumentInstrumentsInstrumentIdDelete(
         self, RequestParameters: RetireInstrumentInstrumentsInstrumentIdDeleteParameters, *, metadata: MetadataDict
@@ -171,7 +171,7 @@ class InstrumentsFeatureImpl(InstrumentsFeatureBase):
                 ResponseRetireInstrumentInstrumentsInstrumentIdDeleteResponse=instrument_id  # type: ignore
             )
         except Exception as e:
-            raise InstrumentsError(f"Instrument retirement error: {e}")
+            raise InstrumentsError(f"Instrument retirement error: {e}") from e
 
     def CalibrateInstrumentInstrumentsInstrumentIdCalibratePost(
         self,
@@ -210,4 +210,4 @@ class InstrumentsFeatureImpl(InstrumentsFeatureBase):
                 )
             )
         except Exception as e:
-            raise InstrumentsError(f"Instrument calibration error: {e}")
+            raise InstrumentsError(f"Instrument calibration error: {e}") from e
