@@ -106,7 +106,7 @@ tags:
 
 #### GET (No Parameters) → Property
 
-**Example: test1 - Instrument Status**
+**Example: tests/fixtures/openapi/test1.json - Instrument Status**
 
 OpenAPI:
 ```json
@@ -157,7 +157,7 @@ OpenAPI:
 
 #### GET/POST/PUT/DELETE with Parameters → Command
 
-**Example: test4 - Dispose Sample (DELETE with path parameters)**
+**Example: tests/fixtures/openapi/test4.json - Dispose Sample (DELETE with path parameters)**
 
 OpenAPI:
 ```json
@@ -306,7 +306,7 @@ All command parameters are organized in SiLA2 XML as a single `RequestParameters
 
 SiLA2 Command responses consist of a Response Element that points to a DataTypeDefinition describing the response data.
 
-**Example from test4 (DisposeSample):**
+**Example from tests/fixtures/expected_fdl/test1_output.xml (DisposeSample):**
 
 ```xml
 <Command>
@@ -431,7 +431,7 @@ In SiLA2, this becomes a List type referencing the Instrument definition:
 |---------|-------|---|
 | `type: object, properties: {...}` | Structure | Named structure containing multiple typed elements |
 
-**Example: test5 - Equipment Diagnostics**
+**Example: tests/fixtures/openapi/test5.json - Equipment Diagnostics**
 
 OpenAPI Schema:
 ```json
@@ -545,7 +545,7 @@ SiLA2 supports optional constraints on primitive types to enforce value ranges, 
 
 ### Enum Constraints
 
-**Example: test1 - Instrument Status**
+**Example: tests/fixtures/openapi/test1.json - Instrument Status**
 
 OpenAPI Schema:
 ```json
@@ -581,7 +581,7 @@ OpenAPI Schema:
 
 ### Numeric Constraints
 
-**Example: test2 - Temperature Setpoint**
+**Example: tests/fixtures/openapi/test2.json - Temperature Setpoint**
 
 OpenAPI Schema:
 ```json
@@ -631,7 +631,7 @@ Maps to: SiLA2 `MinimalExclusive` and `MaximalExclusive` constraints.
 
 ### Path Parameters
 
-**Example: test4 - Dispose Sample (DELETE with path parameter)**
+**Example: tests/fixtures/openapi/test4.json - Dispose Sample (DELETE with path parameter)**
 
 OpenAPI:
 ```json
@@ -782,7 +782,7 @@ OpenAPI:
 
 ### Request Body
 
-**Example: test2 - Set Temperature (POST with request body)**
+**Example: tests/fixtures/openapi/test2.json - Set Temperature (POST with request body)**
 
 OpenAPI:
 ```json
