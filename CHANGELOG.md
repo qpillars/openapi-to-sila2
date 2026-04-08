@@ -3,7 +3,16 @@
 All notable changes to this project will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
-## [0.1.0] - Unreleased
+## [0.1.1] - 2026-04-08
+
+### Fixed
+- Minor bug fixes
+
+### Changed
+- Removed unnecessary code
+- Completed contribution guide
+
+## [0.1.0] - 2026-04-02
 
 ### Added
 - FDL generator: convert OpenAPI specifications to SiLA2 Feature Definition XML
