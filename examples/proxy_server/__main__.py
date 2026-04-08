@@ -11,6 +11,8 @@ from typer import BadParameter, Option
 
 logger = logging.getLogger(__name__)
 
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s\n")
+
 _DEFAULT_IP = "0.0.0.0" if running_in_docker() else "127.0.0.1"  # noqa: S104, possible bind to all interfaces
 
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import threading
 from typing import TYPE_CHECKING
@@ -16,6 +17,8 @@ if TYPE_CHECKING:
     from proxy_server import Server  # type: ignore
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 
 class ObservableFeatureImpl(ObservableFeatureBase):
@@ -49,13 +52,12 @@ class ObservableFeatureImpl(ObservableFeatureBase):
                             Metadata=json.dumps(data.get("metadata", {})),
                         )
                         self.update_StreamMeasurementsObservableMeasurementsGet(measurement_reading)
-                        print(f"[Emitter] Emitted: {measurement_reading}")
+                        logger.debug("Emitted: %s", measurement_reading)
                     except Exception as e:
-                        print(f"[Emitter] Failed to decode or emit: {e}")
-                        print(f"[Emitter] Raw data: {data}")
+                        logger.warning("Failed to decode or emit: %s", e)
 
         except Exception as e:
-            print(f"[Emitter] Stream error: {e}")
+            logger.error("Stream error: %s", e)
 
         with self._lock:
             self._emitter_thread = None

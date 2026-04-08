@@ -20,6 +20,10 @@ classifiers = [
 readme = "README.md"
 requires-python = ">=3.10"
 
+authors = [
+    { name = "QPillars GmbH", email = "info@qpillars.com" },
+]
+
 dependencies = [
     "lxml>=6.0.2",
     "openapi-spec-validator>=0.7.2",
@@ -28,6 +32,14 @@ dependencies = [
     "sila2[codegen,cryptography]>=0.13.0",
     "typer>=0.24.1",
 ]
+
+[project.urls]
+Homepage = "https://qpillars.com"
+Repository = "https://github.com/qpillars/openapi-to-sila2"
+Issues = "https://github.com/qpillars/openapi-to-sila2/issues"
+
+[project.scripts]
+openapi-to-sila2 = "openapi_to_sila2.cli:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -41,9 +53,6 @@ packages = ["src/openapi_to_sila2"]
 include = [
     "src/openapi_to_sila2/schemas",
 ]
-
-[project.scripts]
-openapi-to-sila2 = "openapi_to_sila2.cli:main"
 
 [dependency-groups]
 dev = [

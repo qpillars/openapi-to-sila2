@@ -156,9 +156,6 @@ openapi-to-sila2 generate \
   -o ./generated \
   --codegen \
   --types
-
-# With feature prefix
-openapi-to-sila2 generate -i api.json -o ./generated --feature-prefix MySystem
 ```
 
 ### `openapi-to-sila2 version`

@@ -134,11 +134,6 @@ def generate(
         "--types",
         help="Also generate Python type classes (requires --codegen)",
     ),
-    feature_prefix: str = typer.Option(
-        "",
-        "--feature-prefix",
-        help="Optional prefix for feature identifiers",
-    ),
 ) -> None:
     """
     Generate SiLA2 Feature Definition Language (FDL) files from an OpenAPI specification.
@@ -162,9 +157,6 @@ def generate(
                 raise typer.Exit(code=1)
 
             _run_type_generation(output_dir)
-
-        if feature_prefix:
-            typer.echo(f"ℹ️  Feature prefix '{feature_prefix}' applied (currently placeholder)")
 
         typer.echo("📄 Generated files are ready for use with SiLA2 systems")
 
