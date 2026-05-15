@@ -1,0 +1,22 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "Partially Tagged API", "version": "1.0.0" },
+  "tags": [{ "name": "Inventory", "description": "Inventory operations" }],
+  "paths": {
+    "/inventory": {
+      "get": {
+        "tags": ["Inventory"],
+        "operationId": "listInventory",
+        "summary": "List inventory",
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/orders": {
+      "get": {
+        "operationId": "listOrders",
+        "summary": "List orders - intentionally no tag",
+        "responses": { "200": { "description": "ok" } }
+      }
+    }
+  }
+}

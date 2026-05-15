@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.2.0] - 2026-05-15
+
+### Added
+- Default-tag fallback: operations without `tags` get a tag inferred from their path (E01)
+- `_infer_tag_from_path` helper that skips `api` and version segments (e.g. `v1`, `v2.0`)
+- Test coverage for untagged specs, version-prefixed paths, and mixed tagged/untagged specs
+
+### Fixed
+- `normalize_openapi_specification` now iterates each operation correctly (previous indentation bug saw only the last operation per path)
+- Clearer error message when the spec genuinely has no operations
+
 ## [0.1.1] - 2026-04-08
 
 ### Fixed

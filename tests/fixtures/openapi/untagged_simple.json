@@ -1,0 +1,26 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "Untagged Simple API", "version": "1.0.0" },
+  "paths": {
+    "/instruments": {
+      "get": {
+        "operationId": "listInstruments",
+        "summary": "List all instruments",
+        "responses": { "200": { "description": "ok" } }
+      },
+      "post": {
+        "operationId": "createInstrument",
+        "summary": "Create an instrument",
+        "responses": { "201": { "description": "created" } }
+      }
+    },
+    "/instruments/{id}": {
+      "get": {
+        "operationId": "getInstrument",
+        "summary": "Get one instrument",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "ok" } }
+      }
+    }
+  }
+}
