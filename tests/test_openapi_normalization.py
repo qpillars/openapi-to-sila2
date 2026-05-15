@@ -29,6 +29,7 @@ def test_normalize_untagged_simple(fdl_generator, fixtures_path):
     input_file = fixtures_path / "openapi" / "untagged_simple.json"
     parser = BaseParser(str(input_file))
     specification = parser.specification
+    assert specification is not None, "OpenAPI specification failed to parse"
 
     fdl_generator.specification = specification
     fdl_generator.normalize_openapi_specification()
@@ -50,6 +51,7 @@ def test_normalize_untagged_versioned(fdl_generator, fixtures_path):
     input_file = fixtures_path / "openapi" / "untagged_versioned.json"
     parser = BaseParser(str(input_file))
     specification = parser.specification
+    assert specification is not None, "OpenAPI specification failed to parse"
 
     fdl_generator.specification = specification
     fdl_generator.normalize_openapi_specification()
@@ -63,6 +65,7 @@ def test_normalize_partially_tagged(fdl_generator, fixtures_path):
     input_file = fixtures_path / "openapi" / "partially_tagged.json"
     parser = BaseParser(str(input_file))
     specification = parser.specification
+    assert specification is not None, "OpenAPI specification failed to parse"
 
     fdl_generator.specification = specification
     fdl_generator.normalize_openapi_specification()
