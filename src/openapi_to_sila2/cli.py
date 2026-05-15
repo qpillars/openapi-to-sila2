@@ -8,6 +8,7 @@ import typer
 from openapi_to_sila2 import __version__
 from openapi_to_sila2.class_generator import Sila2ClassGenerator
 from openapi_to_sila2.fdl_generator import FDLGenerator
+from openapi_to_sila2.validation import ValidationLevel, validate_fdl, validate_fdl_dir
 
 app = typer.Typer(
     name="openapi-to-sila2",
@@ -172,6 +173,41 @@ def generate(
     except Exception as e:
         typer.echo(f"❌ Generation error: {e}", err=True)
         raise typer.Exit(code=2)
+
+
+@app.command()
+def validate(
+    path: Path = typer.Argument(
+        ...,
+        help="Path to an FDL XML file or a directory containing *.xml feature files",
+        exists=True,
+    ),
+    level: ValidationLevel = typer.Option(
+        ValidationLevel.XSD,
+        "--level",
+        "-l",
+        help="Validation thoroughness. xsd is fast schema validation; codegen runs sila2-codegen; full runs both.",
+    ),
+) -> None:
+    """
+    Validate FDL feature files against the official SiLA 2 schema (and optionally sila2-codegen).
+
+    Exits non-zero if any file fails validation, with one issue printed per line.
+    """
+
+    result = validate_fdl_dir(path, level=level) if path.is_dir() else validate_fdl(path, level=level)
+
+    if result.valid:
+        typer.echo(f"✅ FDL validation passed ({level})")
+        return
+
+    typer.echo(f"❌ FDL validation failed ({len(result.issues)} issue(s)):", err=True)
+
+    for issue in result.issues:
+        location = f"{issue.feature_file}:{issue.line}" if issue.line else issue.feature_file
+        typer.echo(f"  [{issue.level}] {location}: {issue.message}", err=True)
+
+    raise typer.Exit(code=1)
 
 
 @app.command()

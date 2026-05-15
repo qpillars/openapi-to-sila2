@@ -158,13 +158,30 @@ openapi-to-sila2 generate \
   --types
 ```
 
+### `openapi-to-sila2 validate`
+
+Validate one or more FDL feature files against the official SiLA 2 schema (and optionally the `sila2-codegen` semantic toolchain). Use this as a CI gate after generation.
+
+```bash
+# Fast XSD validation on a directory of FDL files
+openapi-to-sila2 validate ./generated
+
+# Validate a single file at the deeper "codegen" level (runs sila2-codegen)
+openapi-to-sila2 validate ./generated/myFeature.xml --level codegen
+
+# Both XSD and codegen
+openapi-to-sila2 validate ./generated --level full
+```
+
+Exits non-zero if any file fails, printing one issue per line with `feature_file:line` location.
+
 ### `openapi-to-sila2 version`
 
 Display the installed version.
 
 ```bash
 openapi-to-sila2 version
-# Output: openapi-to-sila2 version: 0.1.0
+# Output: openapi-to-sila2 version: 0.3.0
 ```
 
 ---
@@ -176,14 +193,48 @@ Use openapi-to-sila2 programmatically in your build scripts:
 ### FDL Generation
 
 ```python
-from openapi_to_sila2 import FDLGenerator
+from openapi_to_sila2 import FDLGenerator, ValidationLevel
 
 generator = FDLGenerator()
+
+# Basic usage - generate without validation
 generator.generate_fdl_from_openapi(
     openapi_spec_path="./api.openapi.json",
-    output_directory="./generated"
+    output_directory="./generated",
+)
+
+# Recommended: generate + validate against the SiLA 2 XSD in one call.
+# Raises FdlValidationError if any generated FDL is invalid.
+generator.generate_fdl_from_openapi(
+    openapi_spec_path="./api.openapi.json",
+    output_directory="./generated",
+    validate=ValidationLevel.XSD,
 )
 ```
+
+### FDL Validation
+
+Validate already-generated FDL files (e.g. as a CI gate) without running the generator:
+
+```python
+from pathlib import Path
+from openapi_to_sila2 import ValidationLevel, validate_fdl, validate_fdl_dir
+
+# Single file
+result = validate_fdl(Path("./generated/myFeature.xml"), level=ValidationLevel.XSD)
+if not result.valid:
+    for issue in result.issues:
+        print(f"{issue.feature_file}:{issue.line} - {issue.message}")
+
+# Whole directory
+result = validate_fdl_dir(Path("./generated"), level=ValidationLevel.FULL)
+```
+
+Three validation levels:
+
+- `ValidationLevel.XSD` - validates against the bundled `FeatureDefinition.xsd`. Fast (< 50ms).
+- `ValidationLevel.CODEGEN` - runs `sila2-codegen` as a semantic round-trip. Slower (~1-2s per feature) but catches issues XSD doesn't.
+- `ValidationLevel.FULL` - both.
 
 ### Custom Type Generation
 

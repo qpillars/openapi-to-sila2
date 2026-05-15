@@ -1,10 +1,16 @@
+from __future__ import annotations
+
 import os
 import re
-from typing import Any
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 from lxml import etree  # type: ignore
 from prance import ResolvingParser
+
+if TYPE_CHECKING:
+    from openapi_to_sila2.validation import ValidationLevel
 
 _PATH_VERSION_PREFIX_RE = re.compile(r"^v\d+(\.\d+)?$", re.IGNORECASE)
 _PATH_API_PREFIX_TOKENS = frozenset({"api"})
@@ -75,10 +81,19 @@ class FDLGenerator:
         self.common_parameters: list[Any] = []
         self.specification: dict[str, Any] | None = None
 
-    def generate_fdl_from_openapi(self, openapi_path: str, output_directory: str) -> None:
+    def generate_fdl_from_openapi(
+        self,
+        openapi_path: str,
+        output_directory: str,
+        validate: ValidationLevel | None = None,
+    ) -> None:
         """
         Parse the OpenAPI specification and generate SiLA2 FDL XML files for each tag.
         Each feature is written to a separate XML file in the output directory.
+
+        Pass `validate` (see `openapi_to_sila2.validation.ValidationLevel`) to run
+        XSD and/or sila2-codegen checks immediately after writing. On failure a
+        `FdlValidationError` is raised with the precise issue list.
         """
 
         parser = ResolvingParser(openapi_path)
@@ -106,6 +121,15 @@ class FDLGenerator:
 
             with open(f"{output_directory}/{file_name}", "wb") as f:
                 tree.write(f, pretty_print=True, xml_declaration=True, encoding="UTF-8")
+
+        if validate is not None:
+            # Local import keeps validation deps optional at module import time.
+            from openapi_to_sila2.validation import FdlValidationError, validate_fdl_dir
+
+            result = validate_fdl_dir(Path(output_directory), level=validate)
+
+            if not result.valid:
+                raise FdlValidationError(result)
 
     def normalize_openapi_specification(self) -> None:
         """
@@ -323,10 +347,16 @@ class FDLGenerator:
     def __generate_property(self, operation: dict, observable: bool = False) -> None:
         """
         Generate a SiLA2 Property element for an OpenAPI GET operation, including response data type.
+
+        Per the SiLA 2 XSD, a Property MUST contain a DataType. When the OpenAPI
+        operation has no usable response schema (e.g. a `200` response with no
+        `application/json` content), we emit a default Basic/String DataType so
+        the FDL stays XSD-valid.
         """
 
         property = self.__generate_element("Property", operation, "Property", observable)
 
+        data_type_emitted = False
         responses = operation.get("responses", {})
         success_response = next((responses[code] for code in responses if code.startswith("2")), None)
 
@@ -337,8 +367,24 @@ class FDLGenerator:
 
             if schema:
                 self.__link_data_type_identifier(schema, property)
+                data_type_emitted = True
+
+        if not data_type_emitted:
+            self.__emit_default_data_type(property)
 
         self.__link_defined_execution_errors(property)
+
+    @staticmethod
+    def __emit_default_data_type(element: etree.Element) -> None:
+        """
+        Append a minimal `<DataType><Basic>String</Basic></DataType>` block.
+
+        Used when the source OpenAPI operation provides no usable response schema
+        for a Property, so the generated FDL still satisfies the SiLA 2 XSD.
+        """
+
+        data_type = etree.SubElement(element, "DataType")
+        etree.SubElement(data_type, "Basic").text = "String"
 
     def __link_defined_execution_errors(self, element: etree.Element) -> None:
         """

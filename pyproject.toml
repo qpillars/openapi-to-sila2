@@ -1,6 +1,6 @@
 [project]
 name = "openapi-to-sila2"
-version = "0.2.0"
+version = "0.3.0"
 description = "Generate SiLA2 Feature Definitions and proxy servers from OpenAPI specifications"
 keywords = ["sila2", "openapi", "lab-automation", "code-generation", "grpc"]
 
