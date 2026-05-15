@@ -6,6 +6,30 @@ from uuid import uuid4
 from lxml import etree  # type: ignore
 from prance import ResolvingParser
 
+_PATH_VERSION_PREFIX_RE = re.compile(r"^v\d+(\.\d+)?$", re.IGNORECASE)
+_PATH_API_PREFIX_TOKENS = frozenset({"api"})
+_DEFAULT_FALLBACK_TAG = "default"
+
+
+def _infer_tag_from_path(path: str) -> str:
+    """
+    Derive a tag name from an OpenAPI path.
+
+    Strategy:
+    - Strip the leading slash and split on '/'
+    - Skip parameter segments (e.g. '{id}')
+    - Skip well-known prefix segments: 'api', and version markers like 'v1' or 'v2.0'
+    - Return the first remaining segment, lowercased
+    - Fall back to 'default' when no usable segment is found
+    """
+
+    segments = [s for s in path.strip("/").split("/") if s and not s.startswith("{")]
+
+    while segments and (segments[0].lower() in _PATH_API_PREFIX_TOKENS or _PATH_VERSION_PREFIX_RE.match(segments[0])):
+        segments.pop(0)
+
+    return segments[0].lower() if segments else _DEFAULT_FALLBACK_TAG
+
 
 class FDLGenerator:
     """
@@ -65,7 +89,10 @@ class FDLGenerator:
         tags = self.specification.get("tags", [])
 
         if len(tags) == 0:
-            raise ValueError("No tags found in the OpenAPI specification.")
+            raise ValueError(
+                "OpenAPI specification has no operations to generate from. "
+                "Add at least one path with a valid HTTP method (get, post, put, patch, delete)."
+            )
 
         for tag in tags:
             self.__generate_feature_definition(tag)
@@ -82,37 +109,42 @@ class FDLGenerator:
 
     def normalize_openapi_specification(self) -> None:
         """
-        Normalize the OpenAPI specification by ensuring that the tags are properly defined
-        by checking each operation's tags against the global tags list.
+        Normalize the OpenAPI specification so the FDL generator has a usable
+        tag-to-operation mapping. Two passes:
+
+        1. Operations with no `tags` get a tag inferred from their path (see
+           `_infer_tag_from_path`). This mutates the operation in place so the
+           rest of the generator sees a tagged operation.
+        2. The global `tags` list is backfilled with any tag names that appear
+           on operations but are missing from the global list, so the generator
+           emits an FDL Feature for each.
         """
 
         if self.specification is None:
             return
 
-        tags = self.specification.get("tags", [])
+        paths = self.specification.get("paths", {})
+        global_tags = list(self.specification.get("tags", []))
+        existing_names = {t["name"] for t in global_tags if isinstance(t, dict) and "name" in t}
 
-        if len(tags) == 0:
-            paths = self.specification.get("paths", {})
-            global_tags = list()
+        for path, methods in paths.items():
+            for method, operation in methods.items():
+                if method.lower() == "parameters":
+                    continue
 
-            for _, methods in paths.items():
-                for method, operation in methods.items():
-                    if method.lower() == "parameters":
-                        continue
+                op_tags = operation.get("tags", [])
 
-                operation_tags = operation.get("tags", [])
+                if not op_tags:
+                    inferred = _infer_tag_from_path(path)
+                    operation["tags"] = [inferred]
+                    op_tags = [inferred]
 
-                if operation_tags:
-                    tag_name = operation_tags[0]
+                for name in op_tags:
+                    if name not in existing_names:
+                        global_tags.append({"name": name, "description": "No description provided."})
+                        existing_names.add(name)
 
-                    if not any(t["name"] == tag_name for t in global_tags):
-                        global_tags.append(
-                            {
-                                "name": tag_name,
-                                "description": "No description provided.",
-                            }
-                        )
-
+        if global_tags:
             self.specification["tags"] = global_tags
 
     def print_fdl_tree(self, tree: etree.ElementTree) -> None:

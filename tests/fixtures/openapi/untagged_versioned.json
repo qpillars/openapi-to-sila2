@@ -1,0 +1,27 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "Versioned API", "version": "1.0.0" },
+  "paths": {
+    "/api/v1/samples": {
+      "get": {
+        "operationId": "listSamples",
+        "summary": "List samples",
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/v2/runs/{id}": {
+      "get": {
+        "operationId": "getRun",
+        "summary": "Get run",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "ok" } }
+      },
+      "delete": {
+        "operationId": "deleteRun",
+        "summary": "Delete run",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "204": { "description": "deleted" } }
+      }
+    }
+  }
+}
