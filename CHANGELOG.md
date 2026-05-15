@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.3.0] - 2026-05-15
+
+### Added
+- Public validation API: `validate_fdl`, `validate_fdl_dir`, `ValidationLevel`, `ValidationResult`, `ValidationIssue`, `FdlValidationError`
+- `FDLGenerator.generate_fdl_from_openapi(..., validate=ValidationLevel.XSD)` runs validation immediately after generation and raises `FdlValidationError` on failure
+- New CLI command: `openapi-to-sila2 validate <path> [--level xsd|codegen|full]`
+- Properties without a response schema now emit a default `<DataType><Basic>String</Basic></DataType>` (was XSD-invalid before)
+
+### Fixed
+- `__generate_property` no longer produces FDL that violates the SiLA 2 XSD when an OpenAPI 2xx response has no `application/json` content
+
 ## [0.2.0] - 2026-05-15
 
 ### Added
