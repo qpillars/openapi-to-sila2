@@ -548,9 +548,7 @@ class FDLGenerator:
                     # actually registered. Recomputing it here (the old code)
                     # generated a fresh uuid4 for titleless schemas and
                     # produced a dangling reference.
-                    generated_data_type_identifier = self.__link_data_type_identifier(
-                        schema, None
-                    )
+                    generated_data_type_identifier = self.__link_data_type_identifier(schema, None)
 
                     if data_type is None:
                         data_type = etree.SubElement(parameter_container, "DataType")
