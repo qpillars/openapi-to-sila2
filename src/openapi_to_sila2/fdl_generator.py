@@ -395,18 +395,28 @@ class FDLGenerator:
         defined_execution_error_identifier = etree.SubElement(defined_execution_error, "Identifier")
         defined_execution_error_identifier.text = self.common_error_identifier
 
-    def __link_data_type_identifier(self, schema: dict, element: etree.Element) -> None:
+    def __link_data_type_identifier(self, schema: dict, element: etree.Element) -> str:
         """
-        Link a data type identifier to a SiLA2 element, generating the data type definition if needed.
+        Link a data type identifier to a SiLA2 element, generating the data type
+        definition if needed. Returns the identifier so callers can reuse it
+        without re-deriving (which would generate a fresh uuid4 for titleless
+        schemas).
         """
 
-        generated_data_type_identifier = self.__normalize_identifier(schema.get("title", str(uuid4())), "DataType")
+        # Compute the identifier ONCE. `schema.get("title", str(uuid4()))`
+        # re-evaluates the default on every call - so calling it twice on a
+        # titleless schema gives two different identifiers and breaks the
+        # reference/definition link.
+        title = schema.get("title") or str(uuid4())
+        generated_data_type_identifier = self.__normalize_identifier(title, "DataType")
 
         if generated_data_type_identifier not in self.existing_schemas:
             generated_data_type = self.__generate_data_type_from_schema(schema)
             self.existing_schemas[generated_data_type_identifier] = generated_data_type
 
-            data_type_definition = self.__generate_data_type_definition(schema)
+            data_type_definition = self.__generate_data_type_definition(
+                schema, identifier=generated_data_type_identifier
+            )
             data_type_definition.append(generated_data_type)
 
             self.__root.append(data_type_definition)
@@ -415,6 +425,8 @@ class FDLGenerator:
             element_data_type = etree.SubElement(element, "DataType")
             element_data_type_identifier = etree.SubElement(element_data_type, "DataTypeIdentifier")
             element_data_type_identifier.text = generated_data_type_identifier
+
+        return generated_data_type_identifier
 
     def __generate_command_parameters_and_payload_data_type(
         self, operation: dict, parameter_container: etree.Element
@@ -532,9 +544,12 @@ class FDLGenerator:
                 schema = json_content.get("schema", {})
 
                 if schema:
-                    self.__link_data_type_identifier(schema, None)
-                    generated_data_type_identifier = self.__normalize_identifier(
-                        schema.get("title", str(uuid4())), "DataType"
+                    # Capture the identifier that __link_data_type_identifier
+                    # actually registered. Recomputing it here (the old code)
+                    # generated a fresh uuid4 for titleless schemas and
+                    # produced a dangling reference.
+                    generated_data_type_identifier = self.__link_data_type_identifier(
+                        schema, None
                     )
 
                     if data_type is None:
@@ -583,15 +598,23 @@ class FDLGenerator:
 
         return parameter_element
 
-    def __generate_data_type_definition(self, schema: dict) -> etree.Element:
+    def __generate_data_type_definition(self, schema: dict, identifier: str | None = None) -> etree.Element:
         """
-        Generate the template of the SiLA2 DataTypeDefinition XML element for a given schema.
+        Generate the template of the SiLA2 DataTypeDefinition XML element for a
+        given schema. If `identifier` is provided, it is used verbatim; this
+        keeps the Definition's Identifier byte-identical to the reference its
+        caller wrote, which is required for sila2-codegen to resolve the link.
         """
 
         data_type_definition = etree.Element("DataTypeDefinition")
 
-        identifier = etree.SubElement(data_type_definition, "Identifier")
-        identifier.text = self.__normalize_identifier(schema.get("title", str(uuid4())), "DataTypeDefinition")
+        identifier_element = etree.SubElement(data_type_definition, "Identifier")
+        if identifier is None:
+            # Fallback for any caller that still derives an identifier inline.
+            # Same idiom as __link_data_type_identifier - evaluate uuid4 once.
+            title = schema.get("title") or str(uuid4())
+            identifier = self.__normalize_identifier(title, "DataTypeDefinition")
+        identifier_element.text = identifier
 
         display_name = etree.SubElement(data_type_definition, "DisplayName")
         display_name.text = schema.get("title", "")

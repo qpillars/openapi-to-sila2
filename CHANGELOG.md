@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.3.1] - 2026-05-18
+
+### Fixed
+- **Dangling DataTypeIdentifier references for titleless schemas.** When an OpenAPI schema had no `title`, `__link_data_type_identifier` and `__generate_data_type_definition` each derived an identifier via `schema.get("title", str(uuid4()))`. Because `dict.get`'s default is evaluated on every call, the reference and the definition got different UUIDs and the FDL contained `<DataTypeIdentifier>AutoDataType...</DataTypeIdentifier>` pointing at nothing - `sila2-codegen new-package` rejected such FDLs with `Invalid feature definition: Data type identifier '...' is not defined`. Identifier is now derived once and threaded through. Reproduces on the Swagger Petstore 3.0 spec.
+
 ## [0.3.0] - 2026-05-15
 
 ### Added
