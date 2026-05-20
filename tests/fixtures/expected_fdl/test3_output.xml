@@ -3,44 +3,11 @@
   <Identifier>ResultsFeature</Identifier>
   <DisplayName>Results Feature</DisplayName>
   <Description>Operations for updating and storing sample analysis results</Description>
-  
-  <DataTypeDefinition>
-    <Identifier>UpdateResultsParameters</Identifier>
-    <DisplayName>UpdateResultsParameters Request Parameters</DisplayName>
-    <Description>Request parameters for UpdateResultsParameters operation.</Description>
-    <DataType>
-      <Structure>
-        <Element>
-          <Identifier>RequestBody</Identifier>
-          <DisplayName>Request Body</DisplayName>
-          <Description>The body of the request.</Description>
-          <DataType>
-            <DataTypeIdentifier>AnalysisResults</DataTypeIdentifier>
-          </DataType>
-        </Element>
-      </Structure>
-    </DataType>
-  </DataTypeDefinition>
-
-  <DataTypeDefinition>
-    <Identifier>AnalysisResults</Identifier>
-    <DisplayName>AnalysisResults</DisplayName>
-    <Description>No description provided.</Description>
-    <DataType>
-      <List>
-        <DataType>
-          <Basic>String</Basic>
-        </DataType>
-      </List>
-    </DataType>
-  </DataTypeDefinition>
-  
   <DefinedExecutionError>
     <Identifier>ResultsError</Identifier>
     <DisplayName>Results Error</DisplayName>
     <Description>Generic error for the feature.</Description>
   </DefinedExecutionError>
-
   <Command>
     <Identifier>UpdateResults</Identifier>
     <DisplayName>Unnamed Command</DisplayName>
@@ -58,4 +25,50 @@
       <Identifier>ResultsError</Identifier>
     </DefinedExecutionErrors>
   </Command>
+  <DataTypeDefinition>
+    <Identifier>UpdateResultsParameters</Identifier>
+    <DisplayName>UpdateResultsParameters Request Parameters</DisplayName>
+    <Description>Request parameters for UpdateResultsParameters operation.</Description>
+    <DataType>
+      <Structure>
+        <Element>
+          <Identifier>RequestBody</Identifier>
+          <DisplayName>Request Body</DisplayName>
+          <Description>The body of the request.</Description>
+          <DataType>
+            <DataTypeIdentifier>AnalysisResults</DataTypeIdentifier>
+          </DataType>
+        </Element>
+      </Structure>
+    </DataType>
+  </DataTypeDefinition>
+  <DataTypeDefinition>
+    <Identifier>AnalysisResults</Identifier>
+    <DisplayName>AnalysisResults</DisplayName>
+    <Description>No description provided.</Description>
+    <DataType>
+      <List>
+        <DataType>
+          <Structure>
+            <Element>
+              <Identifier>Branch1</Identifier>
+              <DisplayName>Branch1</DisplayName>
+              <Description>One of 2 anyOf alternatives.</Description>
+              <DataType>
+                <Basic>Integer</Basic>
+              </DataType>
+            </Element>
+            <Element>
+              <Identifier>Branch2</Identifier>
+              <DisplayName>Branch2</DisplayName>
+              <Description>One of 2 anyOf alternatives.</Description>
+              <DataType>
+                <Basic>String</Basic>
+              </DataType>
+            </Element>
+          </Structure>
+        </DataType>
+      </List>
+    </DataType>
+  </DataTypeDefinition>
 </Feature>

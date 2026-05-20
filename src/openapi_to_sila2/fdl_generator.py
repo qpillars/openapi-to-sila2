@@ -76,6 +76,50 @@ class FDLGenerator:
         ),
     }
 
+    # OpenAPI `format` keyword -> (SiLA Basic, optional Pattern, optional
+    # description). The pattern strings below are deliberately conservative;
+    # they are there to give validators something to bind on, not to be
+    # RFC-perfect. Unknown formats fall through to plain `Basic=String`.
+    _STRING_FORMAT_MAP = {
+        "date": ("Date", None, None),
+        "time": ("Time", None, None),
+        "date-time": ("Timestamp", None, None),
+        "binary": ("Binary", None, "Binary payload."),
+        "byte": ("Binary", None, "Base64-encoded binary payload."),
+        "uuid": (
+            "String",
+            r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+            "UUID (RFC 4122).",
+        ),
+        "email": ("String", r"^[^@\s]+@[^@\s]+\.[^@\s]+$", "Email address."),
+        "uri": ("String", r"^[a-zA-Z][a-zA-Z0-9+\-.]*:.+$", "URI."),
+        "url": ("String", r"^[a-zA-Z][a-zA-Z0-9+\-.]*:.+$", "URL."),
+        "hostname": ("String", r"^[a-zA-Z0-9.\-]+$", "Hostname."),
+        "ipv4": ("String", r"^(\d{1,3}\.){3}\d{1,3}$", "IPv4 address."),
+    }
+
+    def __emit_string_format(self, schema: dict, parent: etree.Element) -> bool:
+        """
+        Emit a typed DataType subtree for a `string` schema when `format` is
+        recognized. Returns True if a subtree was emitted (caller should NOT
+        append the default Basic=String), False otherwise.
+        """
+
+        fmt = schema.get("format")
+        if not fmt or fmt not in self._STRING_FORMAT_MAP:
+            return False
+        sila_type, pattern, _description = self._STRING_FORMAT_MAP[fmt]
+
+        if pattern is None:
+            etree.SubElement(parent, "Basic").text = sila_type
+        else:
+            constrained = etree.SubElement(parent, "Constrained")
+            inner = etree.SubElement(constrained, "DataType")
+            etree.SubElement(inner, "Basic").text = sila_type
+            constraints = etree.SubElement(constrained, "Constraints")
+            etree.SubElement(constraints, "Pattern").text = pattern
+        return True
+
     def __init__(self) -> None:
         self.existing_schemas: dict[str, Any] = {}
         self.common_parameters: list[Any] = []
@@ -86,7 +130,8 @@ class FDLGenerator:
         openapi_path: str,
         output_directory: str,
         validate: ValidationLevel | None = None,
-    ) -> None:
+        collect_warnings: bool = False,
+    ) -> list | None:
         """
         Parse the OpenAPI specification and generate SiLA2 FDL XML files for each tag.
         Each feature is written to a separate XML file in the output directory.
@@ -94,11 +139,38 @@ class FDLGenerator:
         Pass `validate` (see `openapi_to_sila2.validation.ValidationLevel`) to run
         XSD and/or sila2-codegen checks immediately after writing. On failure a
         `FdlValidationError` is raised with the precise issue list.
+
+        Pass `collect_warnings=True` to receive a list of
+        `lossy_scan.GenerationWarning` entries describing every OpenAPI
+        construct that will be silently dropped or only partially preserved
+        (oneOf/allOf, formats, SSE content, callbacks, etc.). Returns the
+        list when this flag is set; otherwise returns None.
         """
 
-        parser = ResolvingParser(openapi_path)
+        try:
+            parser = ResolvingParser(openapi_path)
+        except Exception as exc:
+            # prance raises a `RecursionError` (or a "Recursion reached
+            # limit..." message inside a generic exception) when a $ref
+            # chain eats its own tail. The default text is opaque to anyone
+            # who has not lived inside prance. Re-raise with an actionable
+            # hint pointing the user at SiLA 2's actual constraint.
+            msg = str(exc)
+            if "Recursion reached limit" in msg or isinstance(exc, RecursionError):
+                raise ValueError(
+                    f"Recursive schema in {openapi_path}: {msg}. SiLA 2 features "
+                    f"cannot reference themselves directly; flatten the recursion "
+                    f"(e.g. cap children with a sentinel leaf type) or split it "
+                    f"into a separate feature."
+                ) from exc
+            raise
+
         self.specification = parser.specification
         self.normalize_openapi_specification()
+        # SSE companion detection runs after normalize so every operation
+        # has its tags resolved. It mutates operations in-place to add
+        # `x-sila-observable: true` where the heuristic matches.
+        self.__detect_sse_observable_operations()
 
         assert self.specification is not None, "Failed to parse OpenAPI specification"
         tags = self.specification.get("tags", [])
@@ -130,6 +202,15 @@ class FDLGenerator:
 
             if not result.valid:
                 raise FdlValidationError(result)
+
+        if collect_warnings:
+            # Local import - the scanner is opt-in so we keep it off the hot path.
+            from openapi_to_sila2.lossy_scan import scan_openapi_for_lossy_constructs
+
+            spec = parser.specification or {}
+            return scan_openapi_for_lossy_constructs(spec)
+
+        return None
 
     def normalize_openapi_specification(self) -> None:
         """
@@ -168,8 +249,92 @@ class FDLGenerator:
                         global_tags.append({"name": name, "description": "No description provided."})
                         existing_names.add(name)
 
+        # Filter out the magic `observable` tag from the global list so it
+        # does NOT spawn an empty ObservableFeature.xml. It is interpreted
+        # per-operation as a flag.
         if global_tags:
-            self.specification["tags"] = global_tags
+            self.specification["tags"] = [
+                t
+                for t in global_tags
+                if not (
+                    isinstance(t, dict) and isinstance(t.get("name"), str) and t["name"].strip().lower() == "observable"
+                )
+            ]
+
+    @staticmethod
+    def __strip_observable_tag(tags: list) -> tuple[list, bool]:
+        """
+        Treat `observable` (case-insensitive) as a SiLA-level flag, NOT a
+        feature-grouping tag. Returns (filtered_tags, observable_flag).
+
+        Without this, specs that use `tags: [Pipette, observable]` produce
+        TWO features: the real Pipette one AND an empty ObservableFeature
+        because the generator iterates the global tags list and emits one
+        feature per tag.
+        """
+
+        observable = False
+        kept: list = []
+        for t in tags:
+            if isinstance(t, str) and t.strip().lower() == "observable":
+                observable = True
+            else:
+                kept.append(t)
+        return kept, observable
+
+    def __detect_sse_observable_operations(self) -> None:
+        """
+        Walk the spec and tag the originator command of a 202+SSE pattern
+        with `x-sila-observable: true` so the per-operation generator
+        promotes it to Observable.
+
+        Heuristic:
+        1. Group operations by their (filtered) tags.
+        2. Within each group, look for any operation with a
+           `text/event-stream` response - that's the subscribe endpoint.
+        3. Every other operation in the group that has a 202 response whose
+           JSON schema contains a property ending in `_id` (e.g. `command_id`,
+           `job_id`) is treated as the originator.
+        4. Mark the originator with `x-sila-observable: true`.
+
+        Intentionally heuristic - SSE conventions vary - but covers the
+        common lab automation case (start something, get an id, subscribe
+        to events on a sibling endpoint).
+        """
+
+        if self.specification is None:
+            return
+
+        tag_to_ops: dict[str, list[tuple[str, str, dict]]] = {}
+        for path, methods in self.specification.get("paths", {}).items():
+            for method, op in methods.items():
+                if method.lower() == "parameters" or not isinstance(op, dict):
+                    continue
+                kept, _ = self.__strip_observable_tag(op.get("tags", []))
+                for t in kept:
+                    tag_to_ops.setdefault(t, []).append((path, method, op))
+
+        for _tag, ops in tag_to_ops.items():
+            has_sse = any(
+                isinstance(resp, dict) and "text/event-stream" in (resp.get("content") or {})
+                for _, _, op in ops
+                for resp in op.get("responses", {}).values()
+            )
+            if not has_sse:
+                continue
+            for _, _, op in ops:
+                if any(
+                    isinstance(resp, dict) and "text/event-stream" in (resp.get("content") or {})
+                    for resp in op.get("responses", {}).values()
+                ):
+                    continue  # skip the SSE endpoint itself
+                accepted = op.get("responses", {}).get("202") or op.get("responses", {}).get(202)
+                if not isinstance(accepted, dict):
+                    continue
+                schema = (accepted.get("content") or {}).get("application/json", {}).get("schema", {})
+                props = (schema or {}).get("properties") or {}
+                if any(name.endswith("_id") or name == "id" for name in props.keys()):
+                    op["x-sila-observable"] = True
 
     def print_fdl_tree(self, tree: etree.ElementTree) -> None:
         """
@@ -210,6 +375,13 @@ class FDLGenerator:
         feature_description = etree.SubElement(self.__root, "Description")
         feature_description.text = tag.get("description", "No description provided.")
 
+        # Feature-level Metadata for header parameters. We collect headers
+        # across all operations of this feature and emit one <Metadata>
+        # element per unique header name at the end of this method, instead
+        # of nesting them under each command's parameter Structure (which
+        # was the wrong fit for SiLA 2 - headers are SiLA Metadata).
+        self.__feature_metadata_headers: dict[str, dict] = {}
+
         feature_execution_error = etree.SubElement(self.__root, "DefinedExecutionError")
         feature_execution_error_identifier = etree.SubElement(feature_execution_error, "Identifier")
         self.common_error_identifier = self.__normalize_identifier(f"{tag.get('name', str(uuid4()))} Error", "Error")
@@ -231,20 +403,50 @@ class FDLGenerator:
                     continue
 
                 tags = op.get("tags", [])
-                observable = "observable" in map(str.lower, tags)
+                tags, observable = self.__strip_observable_tag(tags)
+
+                # Honor the SSE companion-detector tag too.
+                if op.get("x-sila-observable"):
+                    observable = True
 
                 if tag.get("name") not in tags:
                     continue
 
+                # Header-only GETs still qualify as SiLA Properties because
+                # headers move to feature-level Metadata. Filter `in: header`
+                # params out of the GET-vs-Command discrimination AND collect
+                # them into the feature-level Metadata map up front.
+                non_header_params = [p for p in op.get("parameters", []) if p.get("in") != "header"]
+                non_header_common = [p for p in (self.common_parameters or []) if p.get("in") != "header"]
                 if (
                     method.lower() == "get"
-                    and not op.get("parameters", [])
+                    and not non_header_params
                     and not op.get("security", [])
-                    and not self.common_parameters
+                    and not non_header_common
                 ):
+                    for p in op.get("parameters", []) + list(self.common_parameters or []):
+                        if p.get("in") == "header":
+                            nm = p.get("name")
+                            if nm and nm not in self.__feature_metadata_headers:
+                                self.__feature_metadata_headers[nm] = p.get("schema") or {"type": "string"}
                     self.__generate_property(op, observable)
                 else:
                     self.__generate_command(op, observable)
+
+        # Emit one feature-level <Metadata> per unique header collected
+        # across the operations of this feature.
+        for hdr_name, hdr_schema in self.__feature_metadata_headers.items():
+            meta = etree.SubElement(self.__root, "Metadata")
+            ident = etree.SubElement(meta, "Identifier")
+            ident.text = self.__normalize_identifier(hdr_name, "Metadata")
+            dn = etree.SubElement(meta, "DisplayName")
+            dn.text = hdr_name
+            desc = etree.SubElement(meta, "Description")
+            desc.text = f"Request header `{hdr_name}` (mapped from OpenAPI header parameter)."
+            dt = self.__generate_data_type_from_schema(hdr_schema or {"type": "string"})
+            meta.append(dt)
+            # Per SiLA 2 schema, Metadata may declare DefinedExecutionErrors.
+            self.__link_defined_execution_errors(meta)
 
     def __generate_element(
         self, tag: str, operation: dict, default_suffix: str, observable: bool = False
@@ -327,6 +529,17 @@ class FDLGenerator:
             json_content = content.get("application/json", {})
             schema = json_content.get("schema", {})
 
+            # Inline SSE on a command response promotes the command to
+            # Observable AND uses the event schema as the response payload.
+            # The Observable flag was set to "No" when the element was built;
+            # we flip it in place if SSE is the only response content.
+            sse_content = content.get("text/event-stream", {})
+            if sse_content and not schema:
+                schema = sse_content.get("schema", {}) or {"type": "object", "title": "SSEEvent"}
+                obs_flag = command.find("Observable")
+                if obs_flag is not None:
+                    obs_flag.text = "Yes"
+
             if schema:
                 response_element = etree.SubElement(command, "Response")
                 response_identifier = etree.SubElement(response_element, "Identifier")
@@ -341,8 +554,38 @@ class FDLGenerator:
                 response_description.text = f"Response containing the {schema.get('title', 'response')}."
 
                 self.__link_data_type_identifier(schema, response_element)
+            elif "application/octet-stream" in content:
+                # Binary response (e.g. image acquisition, file download). Emit
+                # an inline `<Response>Basic=Binary</Response>` so the Command
+                # has a payload at all - previously these silently produced no
+                # Response element.
+                response_element = etree.SubElement(command, "Response")
+                etree.SubElement(response_element, "Identifier").text = "BinaryResponse"
+                etree.SubElement(response_element, "DisplayName").text = "Binary Response"
+                etree.SubElement(
+                    response_element, "Description"
+                ).text = "Raw binary payload (application/octet-stream)."
+                response_data_type = etree.SubElement(response_element, "DataType")
+                etree.SubElement(response_data_type, "Basic").text = "Binary"
 
-        self.__link_defined_execution_errors(command)
+        # Per-status error schemas: walk the 4xx/5xx responses, register
+        # each distinct error schema as its own feature-level
+        # DefinedExecutionError, and link the identifiers on this command.
+        extra_error_idents: list[str] = []
+        for code, resp in (operation.get("responses") or {}).items():
+            if not isinstance(code, str) or not (code.startswith("4") or code.startswith("5")):
+                continue
+            if not isinstance(resp, dict):
+                continue
+            err_content = (resp.get("content") or {}).get("application/json", {})
+            err_schema = err_content.get("schema", {})
+            if not err_schema:
+                continue
+            ident = self.__register_status_error(code, err_schema)
+            if ident not in extra_error_idents:
+                extra_error_idents.append(ident)
+
+        self.__link_defined_execution_errors(command, extra_identifiers=extra_error_idents)
 
     def __generate_property(self, operation: dict, observable: bool = False) -> None:
         """
@@ -365,6 +608,16 @@ class FDLGenerator:
             json_content = content.get("application/json", {})
             schema = json_content.get("schema", {})
 
+            # text/event-stream on a GET -> Observable Property. The event
+            # payload schema becomes the property's DataType. We flip the
+            # Observable flag in place.
+            sse_content = content.get("text/event-stream", {})
+            if sse_content and not schema:
+                schema = sse_content.get("schema", {}) or {"type": "object", "title": "SSEEvent"}
+                obs_flag = property.find("Observable")
+                if obs_flag is not None:
+                    obs_flag.text = "Yes"
+
             if schema:
                 self.__link_data_type_identifier(schema, property)
                 data_type_emitted = True
@@ -386,14 +639,57 @@ class FDLGenerator:
         data_type = etree.SubElement(element, "DataType")
         etree.SubElement(data_type, "Basic").text = "String"
 
-    def __link_defined_execution_errors(self, element: etree.Element) -> None:
+    def __link_defined_execution_errors(
+        self, element: etree.Element, extra_identifiers: list[str] | None = None
+    ) -> None:
         """
-        Attach a common execution error definition to a SiLA2 Command or Property element.
+        Attach defined execution error references to a SiLA2 element.
+
+        Always links the feature-level common error. If `extra_identifiers`
+        is provided, each one is added as an additional Identifier inside
+        the same DefinedExecutionErrors block - used by the per-status
+        error mapping to surface distinct error types per HTTP status.
         """
 
         defined_execution_error = etree.SubElement(element, "DefinedExecutionErrors")
         defined_execution_error_identifier = etree.SubElement(defined_execution_error, "Identifier")
         defined_execution_error_identifier.text = self.common_error_identifier
+
+        for extra in extra_identifiers or []:
+            extra_ident = etree.SubElement(defined_execution_error, "Identifier")
+            extra_ident.text = extra
+
+    def __register_status_error(self, code: str, schema: dict) -> str:
+        """
+        Register a per-status error schema as a feature-level
+        DefinedExecutionError. Returns the identifier so the caller can
+        reference it on the command.
+
+        Dedupes by schema title when available, otherwise by HTTP status
+        code. The error definition is appended to the feature root.
+        """
+
+        title = (schema or {}).get("title")
+        if title:
+            ident = self.__normalize_identifier(f"{title}", "Error")
+        else:
+            ident = self.__normalize_identifier(f"Status {code}", "Error")
+
+        if not hasattr(self, "_status_error_idents"):
+            self._status_error_idents: set[str] = set()
+
+        if ident in self._status_error_idents:
+            return ident
+        self._status_error_idents.add(ident)
+
+        err = etree.SubElement(self.__root, "DefinedExecutionError")
+        ident_el = etree.SubElement(err, "Identifier")
+        ident_el.text = ident
+        dn = etree.SubElement(err, "DisplayName")
+        dn.text = title or f"HTTP {code} Error"
+        desc = etree.SubElement(err, "Description")
+        desc.text = f"Error raised when the upstream API returns HTTP {code}."
+        return ident
 
     def __link_data_type_identifier(self, schema: dict, element: etree.Element) -> str:
         """
@@ -446,6 +742,18 @@ class FDLGenerator:
         parameters.extend(operation.get("parameters", []))
         security_requirements = operation.get("security", [])
         request_body = operation.get("requestBody", {})
+
+        # Pre-extract header params into feature-level Metadata so the
+        # per-command Structure stays focused on path/query/cookie.
+        non_header_params = []
+        for param in parameters:
+            if param.get("in") == "header":
+                name = param.get("name")
+                if name and name not in self.__feature_metadata_headers:
+                    self.__feature_metadata_headers[name] = param.get("schema") or {"type": "string"}
+            else:
+                non_header_params.append(param)
+        parameters = non_header_params
 
         data_type, structure = None, None
 
@@ -543,6 +851,14 @@ class FDLGenerator:
                 json_content = content.get("application/json", {})
                 schema = json_content.get("schema", {})
 
+                # Non-JSON request body fallbacks. Real-life specs frequently
+                # hand us multipart/form-data (file uploads), octet-stream
+                # (raw binary), or x-www-form-urlencoded. When no JSON content
+                # is present we synthesize an equivalent schema so the request
+                # parameter structure does not collapse to None and crash lxml.
+                if not schema:
+                    schema = self.__schema_from_non_json_body(content)
+
                 if schema:
                     # Capture the identifier that __link_data_type_identifier
                     # actually registered. Recomputing it here (the old code)
@@ -569,11 +885,54 @@ class FDLGenerator:
                     data_type_element_identifier = etree.SubElement(data_type_element, "DataTypeIdentifier")
                     data_type_element_identifier.text = generated_data_type_identifier
 
+            # When ALL params were headers (now feature-level Metadata) and
+            # there is no request body, `data_type` was never created. Emit
+            # an empty Structure so the DataTypeDefinition still satisfies
+            # the SiLA 2 XSD (which requires a DataType child).
+            if data_type is None:
+                data_type = etree.Element("DataType")
+                etree.SubElement(data_type, "Structure")
+
             data_type_definition.append(data_type)
 
         parameter_container_data_type = etree.SubElement(parameter_container, "DataType")
         parameter_container_data_type_identifier = etree.SubElement(parameter_container_data_type, "DataTypeIdentifier")
         parameter_container_data_type_identifier.text = generated_command_parameter_id
+
+    @staticmethod
+    def __schema_from_non_json_body(content: dict) -> dict:
+        """
+        Synthesize a schema-shaped dict from non-JSON request bodies so the
+        rest of the parameter pipeline can keep going. Without this the
+        generator crashed with `Argument 'element' has incorrect type` from
+        lxml when only multipart/form-data, octet-stream, or
+        x-www-form-urlencoded content was declared.
+
+        - `application/octet-stream` -> a single binary string field. The
+          format flows through the format mapper and lands as `Basic=Binary`.
+        - `multipart/form-data` -> the multipart schema as-is (objects with
+          per-part fields, where parts marked `format: binary` will land as
+          `Basic=Binary` once they flow through the format mapper).
+        - `application/x-www-form-urlencoded` -> same shape as multipart.
+        """
+
+        octet = content.get("application/octet-stream", {})
+        if octet:
+            return {
+                "type": "string",
+                "format": "binary",
+                "title": octet.get("schema", {}).get("title", "BinaryBody"),
+            }
+
+        multipart = content.get("multipart/form-data", {})
+        if multipart and multipart.get("schema"):
+            return multipart["schema"]
+
+        form = content.get("application/x-www-form-urlencoded", {})
+        if form and form.get("schema"):
+            return form["schema"]
+
+        return {}
 
     def __generate_parameter_group_element(self, name: str, display_name: str, description: str) -> etree.Element:
         """
@@ -622,15 +981,95 @@ class FDLGenerator:
 
         return data_type_definition
 
+    @staticmethod
+    def __merge_allof(schemas: list[dict]) -> dict:
+        """
+        Deep-merge a list of `allOf` branches into a single schema:
+
+        - Union the `properties` (later branches win on conflicts).
+        - Union the `required` arrays.
+        - Take the first non-empty `type`.
+        - Forward `description`/`title` from the first branch that defines them.
+
+        prance ResolvingParser resolves $refs but does NOT collapse allOf. We
+        do it here so the rest of the data-type pipeline sees a plain object.
+        """
+
+        merged: dict = {"type": "object", "properties": {}, "required": []}
+        for branch in schemas:
+            if not isinstance(branch, dict):
+                continue
+            if "type" in branch and "type" not in merged:
+                merged["type"] = branch["type"]
+            if branch.get("title") and not merged.get("title"):
+                merged["title"] = branch["title"]
+            if branch.get("description") and not merged.get("description"):
+                merged["description"] = branch["description"]
+            for prop_name, prop_schema in (branch.get("properties") or {}).items():
+                merged["properties"][prop_name] = prop_schema
+            for req in branch.get("required") or []:
+                if req not in merged["required"]:
+                    merged["required"].append(req)
+            # Recursive allOf inside an allOf branch: flatten one level.
+            if "allOf" in branch:
+                inner = FDLGenerator.__merge_allof(branch["allOf"])
+                for prop_name, prop_schema in (inner.get("properties") or {}).items():
+                    merged["properties"].setdefault(prop_name, prop_schema)
+                for req in inner.get("required") or []:
+                    if req not in merged["required"]:
+                        merged["required"].append(req)
+        return merged
+
     def __generate_data_type_from_schema(self, schema: dict) -> etree.Element:
         """
         Recursively generate the SiLA2 DataType XML element from an OpenAPI schema,
-        handling basic types, lists, structures, and constraints. The method does not
-        take into consideration anyOf, oneOf, or allOf constructs and assumes a single
-        DataType with basic type String. The same applies to empty schemas.
+        handling basic types, lists, structures, constraints, and polymorphism.
+
+        Polymorphism handling:
+        - `allOf`: branches are deep-merged into a single Structure.
+        - `oneOf` / `anyOf`: emitted as a Structure with one Element per branch.
+          A `discriminator` (if present) is preserved as a Description hint.
         """
 
         data_type = etree.Element("DataType")
+
+        # Polymorphism FIRST, before the generic type dispatcher. Without this
+        # every oneOf/allOf/anyOf collapsed to Basic=String, dropping every
+        # field declared in the branches.
+        if "allOf" in schema:
+            merged = self.__merge_allof(schema["allOf"])
+            # Carry over any sibling properties/type (rare but legal).
+            for key in ("type", "properties", "required", "title", "description"):
+                if key in schema and key not in merged:
+                    merged[key] = schema[key]
+            return self.__generate_data_type_from_schema(merged)
+
+        if "oneOf" in schema or "anyOf" in schema:
+            branches = schema.get("oneOf") or schema.get("anyOf") or []
+            kind = "oneOf" if "oneOf" in schema else "anyOf"
+            discriminator = (
+                schema.get("discriminator", {}).get("propertyName")
+                if isinstance(schema.get("discriminator"), dict)
+                else None
+            )
+
+            struct_element = etree.SubElement(data_type, "Structure")
+            for i, branch in enumerate(branches):
+                element = etree.SubElement(struct_element, "Element")
+                ident_text = branch.get("title") if isinstance(branch, dict) else None
+                if not ident_text:
+                    ident_text = f"Branch{i + 1}"
+                identifier = etree.SubElement(element, "Identifier")
+                identifier.text = self.__normalize_identifier(ident_text, "Element")
+                display_name = etree.SubElement(element, "DisplayName")
+                display_name.text = ident_text
+                description = etree.SubElement(element, "Description")
+                hint = f"One of {len(branches)} {kind} alternatives."
+                if discriminator:
+                    hint += f" Discriminator: `{discriminator}`."
+                description.text = hint
+                element.append(self.__generate_data_type_from_schema(branch))
+            return data_type
 
         schema_type = schema.get("type", "object")
         sila_type = self.DATA_TYPE_MAPPINGS.get(schema_type, "Any")
@@ -689,6 +1128,12 @@ class FDLGenerator:
                 etree.SubElement(data_type, "Basic").text = "String"
 
         else:
+            # Typed string formats land first - if `format: date-time` etc. is
+            # present we emit `Basic=Timestamp` (Date/Time/Binary/...) and
+            # return before the generic Basic/Constrained logic below.
+            if schema_type == "string" and self.__emit_string_format(schema, data_type):
+                return data_type
+
             constraints_present = any(
                 key in schema
                 for key in [
@@ -727,14 +1172,31 @@ class FDLGenerator:
                         etree.SubElement(constraints_element, "Pattern").text = schema["pattern"]
 
                 if sila_type in ("Integer", "Real"):
-                    if "minimum" in schema:
+                    # OAS 3.0 boolean form: `exclusiveMaximum: true` means the
+                    # adjacent `maximum` is exclusive. SiLA 2 needs a numeric
+                    # bound, so promote `maximum` into `MaximalExclusive` and
+                    # SKIP the corresponding inclusive emit. OAS 3.1 form:
+                    # `exclusiveMaximum: <number>` is numeric and goes through
+                    # as-is. Same logic mirrored for the minimum.
+                    excl_min = schema.get("exclusiveMinimum")
+                    excl_max = schema.get("exclusiveMaximum")
+                    min_is_bool_excl = isinstance(excl_min, bool) and excl_min is True
+                    max_is_bool_excl = isinstance(excl_max, bool) and excl_max is True
+
+                    if "minimum" in schema and not min_is_bool_excl:
                         etree.SubElement(constraints_element, "MinimalInclusive").text = str(schema["minimum"])
-                    if "maximum" in schema:
+                    if "maximum" in schema and not max_is_bool_excl:
                         etree.SubElement(constraints_element, "MaximalInclusive").text = str(schema["maximum"])
-                    if "exclusiveMinimum" in schema:
-                        etree.SubElement(constraints_element, "MinimalExclusive").text = str(schema["exclusiveMinimum"])
-                    if "exclusiveMaximum" in schema:
-                        etree.SubElement(constraints_element, "MaximalExclusive").text = str(schema["exclusiveMaximum"])
+
+                    if min_is_bool_excl and "minimum" in schema:
+                        etree.SubElement(constraints_element, "MinimalExclusive").text = str(schema["minimum"])
+                    elif excl_min is not None and not isinstance(excl_min, bool):
+                        etree.SubElement(constraints_element, "MinimalExclusive").text = str(excl_min)
+
+                    if max_is_bool_excl and "maximum" in schema:
+                        etree.SubElement(constraints_element, "MaximalExclusive").text = str(schema["maximum"])
+                    elif excl_max is not None and not isinstance(excl_max, bool):
+                        etree.SubElement(constraints_element, "MaximalExclusive").text = str(excl_max)
             else:
                 etree.SubElement(data_type, "Basic").text = sila_type
 

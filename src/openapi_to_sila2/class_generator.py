@@ -1,8 +1,27 @@
 import ast
+import re
 from typing import cast
 
 from proto_schema_parser.ast import Field, FieldCardinality, File, Message
 from proto_schema_parser.parser import Parser
+
+# Extract inner type names from string-form annotations like `List[Tags]`,
+# `Optional[Pet]`, `Union[A, B]`. The dependency extractor in
+# __sort_classes_by_dependencies originally only walked AST nodes, so when
+# the generator stuffs `python_type = f"List[{python_type}]"` into an
+# ast.Name id (a string), those dependencies are invisible to the
+# topological sort. Result: types.py emitted `List[Tags]` BEFORE the `Tags`
+# class definition, breaking the import. Now we pull every CamelCase token
+# out of the string so the sort sees them.
+_TYPE_NAME_IN_ANNOTATION_RE = re.compile(r"[A-Z][A-Za-z0-9_]*")
+
+
+def _extract_dep_names_from_string_annotation(text: str) -> set[str]:
+    """Pull out CamelCase tokens from a textual type annotation."""
+
+    if not isinstance(text, str):
+        return set()
+    return set(_TYPE_NAME_IN_ANNOTATION_RE.findall(text))
 
 
 class Sila2ClassGenerator:
@@ -13,11 +32,20 @@ class Sila2ClassGenerator:
     standard `ast` module.
     """
 
+    # Extended to cover the SiLA Basic types that the FDL generator now emits
+    # (Binary, Date, Time, Timestamp, Any). The original mapping only handled
+    # the four pre-format-patch types and produced types.py with undefined
+    # names when a generated proto carried any of these identifiers.
     PROTO_TYPE_MAPPINGS = {
         "String": "str",
         "Integer": "int",
         "Real": "float",
         "Boolean": "bool",
+        "Binary": "bytes",
+        "Date": "str",  # SiLA Date wire-form is ISO-8601 string; refine later.
+        "Time": "str",
+        "Timestamp": "str",
+        "Any": "object",
     }
 
     PARAMETER_KEYWORDS = {
@@ -131,9 +159,12 @@ class Sila2ClassGenerator:
                         ann = stmt.annotation
 
                         if isinstance(ann, ast.Name):
-                            deps.add(ann.id)
+                            # `ann.id` may be a bare name or a string like
+                            # "List[Tags]"; the original code only saw the
+                            # outer "List", so Tags showed up as a forward ref.
+                            deps |= _extract_dep_names_from_string_annotation(ann.id)
                         elif isinstance(ann, ast.Subscript) and isinstance(ann.slice, ast.Name):
-                            deps.add(ann.slice.id)
+                            deps |= _extract_dep_names_from_string_annotation(ann.slice.id)
 
                 dependency_map[node_name] = deps
                 node_name_map[node_name] = node
@@ -149,9 +180,9 @@ class Sila2ClassGenerator:
                 val = node.value
 
                 if isinstance(val, ast.Name):
-                    deps.add(val.id)
+                    deps |= _extract_dep_names_from_string_annotation(val.id)
                 elif isinstance(val, ast.Subscript) and isinstance(val.slice, ast.Name):
-                    deps.add(val.slice.id)
+                    deps |= _extract_dep_names_from_string_annotation(val.slice.id)
 
                 dependency_map[node_name] = deps
                 node_name_map[node_name] = node
