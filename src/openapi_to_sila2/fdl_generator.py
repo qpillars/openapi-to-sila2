@@ -167,6 +167,10 @@ class FDLGenerator:
 
         self.specification = parser.specification
         self.normalize_openapi_specification()
+        # SSE companion detection runs after normalize so every operation
+        # has its tags resolved. It mutates operations in-place to add
+        # `x-sila-observable: true` where the heuristic matches.
+        self.__detect_sse_observable_operations()
 
         assert self.specification is not None, "Failed to parse OpenAPI specification"
         tags = self.specification.get("tags", [])
@@ -244,8 +248,92 @@ class FDLGenerator:
                         global_tags.append({"name": name, "description": "No description provided."})
                         existing_names.add(name)
 
+        # Filter out the magic `observable` tag from the global list so it
+        # does NOT spawn an empty ObservableFeature.xml. It is interpreted
+        # per-operation as a flag.
         if global_tags:
-            self.specification["tags"] = global_tags
+            self.specification["tags"] = [
+                t
+                for t in global_tags
+                if not (
+                    isinstance(t, dict) and isinstance(t.get("name"), str) and t["name"].strip().lower() == "observable"
+                )
+            ]
+
+    @staticmethod
+    def __strip_observable_tag(tags: list) -> tuple[list, bool]:
+        """
+        Treat `observable` (case-insensitive) as a SiLA-level flag, NOT a
+        feature-grouping tag. Returns (filtered_tags, observable_flag).
+
+        Without this, specs that use `tags: [Pipette, observable]` produce
+        TWO features: the real Pipette one AND an empty ObservableFeature
+        because the generator iterates the global tags list and emits one
+        feature per tag.
+        """
+
+        observable = False
+        kept: list = []
+        for t in tags:
+            if isinstance(t, str) and t.strip().lower() == "observable":
+                observable = True
+            else:
+                kept.append(t)
+        return kept, observable
+
+    def __detect_sse_observable_operations(self) -> None:
+        """
+        Walk the spec and tag the originator command of a 202+SSE pattern
+        with `x-sila-observable: true` so the per-operation generator
+        promotes it to Observable.
+
+        Heuristic:
+        1. Group operations by their (filtered) tags.
+        2. Within each group, look for any operation with a
+           `text/event-stream` response - that's the subscribe endpoint.
+        3. Every other operation in the group that has a 202 response whose
+           JSON schema contains a property ending in `_id` (e.g. `command_id`,
+           `job_id`) is treated as the originator.
+        4. Mark the originator with `x-sila-observable: true`.
+
+        Intentionally heuristic - SSE conventions vary - but covers the
+        common lab automation case (start something, get an id, subscribe
+        to events on a sibling endpoint).
+        """
+
+        if self.specification is None:
+            return
+
+        tag_to_ops: dict[str, list[tuple[str, str, dict]]] = {}
+        for path, methods in self.specification.get("paths", {}).items():
+            for method, op in methods.items():
+                if method.lower() == "parameters" or not isinstance(op, dict):
+                    continue
+                kept, _ = self.__strip_observable_tag(op.get("tags", []))
+                for t in kept:
+                    tag_to_ops.setdefault(t, []).append((path, method, op))
+
+        for _tag, ops in tag_to_ops.items():
+            has_sse = any(
+                isinstance(resp, dict) and "text/event-stream" in (resp.get("content") or {})
+                for _, _, op in ops
+                for resp in op.get("responses", {}).values()
+            )
+            if not has_sse:
+                continue
+            for _, _, op in ops:
+                if any(
+                    isinstance(resp, dict) and "text/event-stream" in (resp.get("content") or {})
+                    for resp in op.get("responses", {}).values()
+                ):
+                    continue  # skip the SSE endpoint itself
+                accepted = op.get("responses", {}).get("202") or op.get("responses", {}).get(202)
+                if not isinstance(accepted, dict):
+                    continue
+                schema = (accepted.get("content") or {}).get("application/json", {}).get("schema", {})
+                props = (schema or {}).get("properties") or {}
+                if any(name.endswith("_id") or name == "id" for name in props.keys()):
+                    op["x-sila-observable"] = True
 
     def print_fdl_tree(self, tree: etree.ElementTree) -> None:
         """
@@ -307,7 +395,11 @@ class FDLGenerator:
                     continue
 
                 tags = op.get("tags", [])
-                observable = "observable" in map(str.lower, tags)
+                tags, observable = self.__strip_observable_tag(tags)
+
+                # Honor the SSE companion-detector tag too.
+                if op.get("x-sila-observable"):
+                    observable = True
 
                 if tag.get("name") not in tags:
                     continue
@@ -403,6 +495,17 @@ class FDLGenerator:
             json_content = content.get("application/json", {})
             schema = json_content.get("schema", {})
 
+            # Inline SSE on a command response promotes the command to
+            # Observable AND uses the event schema as the response payload.
+            # The Observable flag was set to "No" when the element was built;
+            # we flip it in place if SSE is the only response content.
+            sse_content = content.get("text/event-stream", {})
+            if sse_content and not schema:
+                schema = sse_content.get("schema", {}) or {"type": "object", "title": "SSEEvent"}
+                obs_flag = command.find("Observable")
+                if obs_flag is not None:
+                    obs_flag.text = "Yes"
+
             if schema:
                 response_element = etree.SubElement(command, "Response")
                 response_identifier = etree.SubElement(response_element, "Identifier")
@@ -453,6 +556,16 @@ class FDLGenerator:
             content = success_response.get("content", {})
             json_content = content.get("application/json", {})
             schema = json_content.get("schema", {})
+
+            # text/event-stream on a GET -> Observable Property. The event
+            # payload schema becomes the property's DataType. We flip the
+            # Observable flag in place.
+            sse_content = content.get("text/event-stream", {})
+            if sse_content and not schema:
+                schema = sse_content.get("schema", {}) or {"type": "object", "title": "SSEEvent"}
+                obs_flag = property.find("Observable")
+                if obs_flag is not None:
+                    obs_flag.text = "Yes"
 
             if schema:
                 self.__link_data_type_identifier(schema, property)
