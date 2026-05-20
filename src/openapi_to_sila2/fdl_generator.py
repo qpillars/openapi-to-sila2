@@ -727,14 +727,31 @@ class FDLGenerator:
                         etree.SubElement(constraints_element, "Pattern").text = schema["pattern"]
 
                 if sila_type in ("Integer", "Real"):
-                    if "minimum" in schema:
+                    # OAS 3.0 boolean form: `exclusiveMaximum: true` means the
+                    # adjacent `maximum` is exclusive. SiLA 2 needs a numeric
+                    # bound, so promote `maximum` into `MaximalExclusive` and
+                    # SKIP the corresponding inclusive emit. OAS 3.1 form:
+                    # `exclusiveMaximum: <number>` is numeric and goes through
+                    # as-is. Same logic mirrored for the minimum.
+                    excl_min = schema.get("exclusiveMinimum")
+                    excl_max = schema.get("exclusiveMaximum")
+                    min_is_bool_excl = isinstance(excl_min, bool) and excl_min is True
+                    max_is_bool_excl = isinstance(excl_max, bool) and excl_max is True
+
+                    if "minimum" in schema and not min_is_bool_excl:
                         etree.SubElement(constraints_element, "MinimalInclusive").text = str(schema["minimum"])
-                    if "maximum" in schema:
+                    if "maximum" in schema and not max_is_bool_excl:
                         etree.SubElement(constraints_element, "MaximalInclusive").text = str(schema["maximum"])
-                    if "exclusiveMinimum" in schema:
-                        etree.SubElement(constraints_element, "MinimalExclusive").text = str(schema["exclusiveMinimum"])
-                    if "exclusiveMaximum" in schema:
-                        etree.SubElement(constraints_element, "MaximalExclusive").text = str(schema["exclusiveMaximum"])
+
+                    if min_is_bool_excl and "minimum" in schema:
+                        etree.SubElement(constraints_element, "MinimalExclusive").text = str(schema["minimum"])
+                    elif excl_min is not None and not isinstance(excl_min, bool):
+                        etree.SubElement(constraints_element, "MinimalExclusive").text = str(excl_min)
+
+                    if max_is_bool_excl and "maximum" in schema:
+                        etree.SubElement(constraints_element, "MaximalExclusive").text = str(schema["maximum"])
+                    elif excl_max is not None and not isinstance(excl_max, bool):
+                        etree.SubElement(constraints_element, "MaximalExclusive").text = str(excl_max)
             else:
                 etree.SubElement(data_type, "Basic").text = sila_type
 
