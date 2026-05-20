@@ -754,15 +754,95 @@ class FDLGenerator:
 
         return data_type_definition
 
+    @staticmethod
+    def __merge_allof(schemas: list[dict]) -> dict:
+        """
+        Deep-merge a list of `allOf` branches into a single schema:
+
+        - Union the `properties` (later branches win on conflicts).
+        - Union the `required` arrays.
+        - Take the first non-empty `type`.
+        - Forward `description`/`title` from the first branch that defines them.
+
+        prance ResolvingParser resolves $refs but does NOT collapse allOf. We
+        do it here so the rest of the data-type pipeline sees a plain object.
+        """
+
+        merged: dict = {"type": "object", "properties": {}, "required": []}
+        for branch in schemas:
+            if not isinstance(branch, dict):
+                continue
+            if "type" in branch and "type" not in merged:
+                merged["type"] = branch["type"]
+            if branch.get("title") and not merged.get("title"):
+                merged["title"] = branch["title"]
+            if branch.get("description") and not merged.get("description"):
+                merged["description"] = branch["description"]
+            for prop_name, prop_schema in (branch.get("properties") or {}).items():
+                merged["properties"][prop_name] = prop_schema
+            for req in branch.get("required") or []:
+                if req not in merged["required"]:
+                    merged["required"].append(req)
+            # Recursive allOf inside an allOf branch: flatten one level.
+            if "allOf" in branch:
+                inner = FDLGenerator.__merge_allof(branch["allOf"])
+                for prop_name, prop_schema in (inner.get("properties") or {}).items():
+                    merged["properties"].setdefault(prop_name, prop_schema)
+                for req in inner.get("required") or []:
+                    if req not in merged["required"]:
+                        merged["required"].append(req)
+        return merged
+
     def __generate_data_type_from_schema(self, schema: dict) -> etree.Element:
         """
         Recursively generate the SiLA2 DataType XML element from an OpenAPI schema,
-        handling basic types, lists, structures, and constraints. The method does not
-        take into consideration anyOf, oneOf, or allOf constructs and assumes a single
-        DataType with basic type String. The same applies to empty schemas.
+        handling basic types, lists, structures, constraints, and polymorphism.
+
+        Polymorphism handling:
+        - `allOf`: branches are deep-merged into a single Structure.
+        - `oneOf` / `anyOf`: emitted as a Structure with one Element per branch.
+          A `discriminator` (if present) is preserved as a Description hint.
         """
 
         data_type = etree.Element("DataType")
+
+        # Polymorphism FIRST, before the generic type dispatcher. Without this
+        # every oneOf/allOf/anyOf collapsed to Basic=String, dropping every
+        # field declared in the branches.
+        if "allOf" in schema:
+            merged = self.__merge_allof(schema["allOf"])
+            # Carry over any sibling properties/type (rare but legal).
+            for key in ("type", "properties", "required", "title", "description"):
+                if key in schema and key not in merged:
+                    merged[key] = schema[key]
+            return self.__generate_data_type_from_schema(merged)
+
+        if "oneOf" in schema or "anyOf" in schema:
+            branches = schema.get("oneOf") or schema.get("anyOf") or []
+            kind = "oneOf" if "oneOf" in schema else "anyOf"
+            discriminator = (
+                schema.get("discriminator", {}).get("propertyName")
+                if isinstance(schema.get("discriminator"), dict)
+                else None
+            )
+
+            struct_element = etree.SubElement(data_type, "Structure")
+            for i, branch in enumerate(branches):
+                element = etree.SubElement(struct_element, "Element")
+                ident_text = branch.get("title") if isinstance(branch, dict) else None
+                if not ident_text:
+                    ident_text = f"Branch{i + 1}"
+                identifier = etree.SubElement(element, "Identifier")
+                identifier.text = self.__normalize_identifier(ident_text, "Element")
+                display_name = etree.SubElement(element, "DisplayName")
+                display_name.text = ident_text
+                description = etree.SubElement(element, "Description")
+                hint = f"One of {len(branches)} {kind} alternatives."
+                if discriminator:
+                    hint += f" Discriminator: `{discriminator}`."
+                description.text = hint
+                element.append(self.__generate_data_type_from_schema(branch))
+            return data_type
 
         schema_type = schema.get("type", "object")
         sila_type = self.DATA_TYPE_MAPPINGS.get(schema_type, "Any")
