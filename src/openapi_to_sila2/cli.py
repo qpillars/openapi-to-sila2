@@ -168,7 +168,10 @@ def generate(
     warnings: bool = typer.Option(
         False,
         "--warnings",
-        help="Scan the spec for lossy constructs (oneOf/allOf/anyOf, formats, SSE, octet-stream, callbacks, ...) and print a report.",
+        help=(
+            "Scan the spec for lossy constructs (oneOf/allOf/anyOf, formats, "
+            "SSE, octet-stream, callbacks, ...) and print a report."
+        ),
     ),
 ) -> None:
     """

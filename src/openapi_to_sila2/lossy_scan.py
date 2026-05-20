@@ -29,15 +29,15 @@ class GenerationWarning(NamedTuple):
 
 _LOSSY_FORMATS = {
     # format -> consequence string
-    "date": "ok: mapped to Basic=Date (Patch 4)",
-    "time": "ok: mapped to Basic=Time (Patch 4)",
-    "date-time": "ok: mapped to Basic=Timestamp (Patch 4)",
-    "duration": "approximate: Basic=Real with second-unit constraint (Patch 4)",
-    "byte": "ok: mapped to Basic=Binary, base64 noted in Description (Patch 4)",
-    "binary": "ok: mapped to Basic=Binary (Patch 4)",
-    "uuid": "ok: String with UUID pattern constraint (Patch 4)",
-    "email": "ok: String with email pattern constraint (Patch 4)",
-    "uri": "ok: String with URI pattern constraint (Patch 4)",
+    "date": "ok: mapped to Basic=Date",
+    "time": "ok: mapped to Basic=Time",
+    "date-time": "ok: mapped to Basic=Timestamp",
+    "duration": "approximate: Basic=Real with second-unit constraint",
+    "byte": "ok: mapped to Basic=Binary (base64-encoded)",
+    "binary": "ok: mapped to Basic=Binary",
+    "uuid": "ok: String with UUID pattern constraint",
+    "email": "ok: String with email pattern constraint",
+    "uri": "ok: String with URI pattern constraint",
     "hostname": "lossy: format dropped; emitted as Basic=String",
     "ipv4": "lossy: format dropped; emitted as Basic=String",
     "ipv6": "lossy: format dropped; emitted as Basic=String",
@@ -58,8 +58,8 @@ def _walk(node: Any, path: str, warnings: list[GenerationWarning]) -> None:
                         path=f"{path}.{key}",
                         construct=f"{key} ({count} branches)",
                         consequence=(
-                            "Patch 3: emitted as a Structure of N alternatives with a discriminator hint. "
-                            "Pre-patch behavior: ALL branches collapsed to Basic=String."
+                            "emitted as a Structure of N alternatives with a discriminator hint. "
+                            "Runtime adapter must enforce exactly-one-branch-non-null."
                         ),
                     )
                 )
@@ -69,7 +69,7 @@ def _walk(node: Any, path: str, warnings: list[GenerationWarning]) -> None:
                 GenerationWarning(
                     path=f"{path}.discriminator",
                     construct="discriminator",
-                    consequence="Patch 3: discriminator property name preserved as a hint Description on the union Structure.",
+                    consequence="discriminator property name preserved as a hint in the union Structure Description.",
                 )
             )
 
@@ -102,7 +102,7 @@ def _walk(node: Any, path: str, warnings: list[GenerationWarning]) -> None:
                         GenerationWarning(
                             path=f"{path}.content.{ct}",
                             construct="text/event-stream",
-                            consequence="Patch 5: command/property promoted to Observable; event schema becomes intermediate response.",
+                            consequence=("promoted to Observable; event schema becomes the response payload."),
                         )
                     )
                 elif ct == "application/octet-stream":
@@ -110,7 +110,7 @@ def _walk(node: Any, path: str, warnings: list[GenerationWarning]) -> None:
                         GenerationWarning(
                             path=f"{path}.content.{ct}",
                             construct="application/octet-stream",
-                            consequence="Patch 1b/1c: binary body emitted as Basic=Binary.",
+                            consequence="binary body emitted as Basic=Binary.",
                         )
                     )
                 elif ct == "multipart/form-data":
@@ -118,7 +118,7 @@ def _walk(node: Any, path: str, warnings: list[GenerationWarning]) -> None:
                         GenerationWarning(
                             path=f"{path}.content.{ct}",
                             construct="multipart/form-data",
-                            consequence="Patch 1b: each part becomes a Structure element; binary parts use Basic=Binary.",
+                            consequence="each part becomes a Structure element; binary parts use Basic=Binary.",
                         )
                     )
                 elif ct == "application/x-www-form-urlencoded":
@@ -126,7 +126,7 @@ def _walk(node: Any, path: str, warnings: list[GenerationWarning]) -> None:
                         GenerationWarning(
                             path=f"{path}.content.{ct}",
                             construct="application/x-www-form-urlencoded",
-                            consequence="Patch 6: each form field becomes a Structure element.",
+                            consequence="each form field becomes a Structure element.",
                         )
                     )
 
@@ -149,7 +149,7 @@ def _walk(node: Any, path: str, warnings: list[GenerationWarning]) -> None:
                 GenerationWarning(
                     path=f"{path}",
                     construct=f"header parameter `{node.get('name', '?')}`",
-                    consequence="Patch 7 (planned): emit as SiLA Metadata. Today: nested under HeaderParameters structure.",
+                    consequence="emitted as a feature-level SiLA Metadata element.",
                 )
             )
 
@@ -169,8 +169,8 @@ def _walk(node: Any, path: str, warnings: list[GenerationWarning]) -> None:
                         path=f"{path}.responses",
                         construct=f"per-status error schemas ({', '.join(error_schemas)})",
                         consequence=(
-                            "Patch 8 (planned): one DefinedExecutionError per distinct error schema. "
-                            "Today: collapsed into a single FeatureError."
+                            "one DefinedExecutionError per distinct error schema (identifier + display "
+                            "name + description); error schema fields are dropped."
                         ),
                     )
                 )
