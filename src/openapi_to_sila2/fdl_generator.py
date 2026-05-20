@@ -567,7 +567,24 @@ class FDLGenerator:
                 response_data_type = etree.SubElement(response_element, "DataType")
                 etree.SubElement(response_data_type, "Basic").text = "Binary"
 
-        self.__link_defined_execution_errors(command)
+        # Per-status error schemas: walk the 4xx/5xx responses, register
+        # each distinct error schema as its own feature-level
+        # DefinedExecutionError, and link the identifiers on this command.
+        extra_error_idents: list[str] = []
+        for code, resp in (operation.get("responses") or {}).items():
+            if not isinstance(code, str) or not (code.startswith("4") or code.startswith("5")):
+                continue
+            if not isinstance(resp, dict):
+                continue
+            err_content = (resp.get("content") or {}).get("application/json", {})
+            err_schema = err_content.get("schema", {})
+            if not err_schema:
+                continue
+            ident = self.__register_status_error(code, err_schema)
+            if ident not in extra_error_idents:
+                extra_error_idents.append(ident)
+
+        self.__link_defined_execution_errors(command, extra_identifiers=extra_error_idents)
 
     def __generate_property(self, operation: dict, observable: bool = False) -> None:
         """
@@ -621,14 +638,57 @@ class FDLGenerator:
         data_type = etree.SubElement(element, "DataType")
         etree.SubElement(data_type, "Basic").text = "String"
 
-    def __link_defined_execution_errors(self, element: etree.Element) -> None:
+    def __link_defined_execution_errors(
+        self, element: etree.Element, extra_identifiers: list[str] | None = None
+    ) -> None:
         """
-        Attach a common execution error definition to a SiLA2 Command or Property element.
+        Attach defined execution error references to a SiLA2 element.
+
+        Always links the feature-level common error. If `extra_identifiers`
+        is provided, each one is added as an additional Identifier inside
+        the same DefinedExecutionErrors block - used by the per-status
+        error mapping to surface distinct error types per HTTP status.
         """
 
         defined_execution_error = etree.SubElement(element, "DefinedExecutionErrors")
         defined_execution_error_identifier = etree.SubElement(defined_execution_error, "Identifier")
         defined_execution_error_identifier.text = self.common_error_identifier
+
+        for extra in extra_identifiers or []:
+            extra_ident = etree.SubElement(defined_execution_error, "Identifier")
+            extra_ident.text = extra
+
+    def __register_status_error(self, code: str, schema: dict) -> str:
+        """
+        Register a per-status error schema as a feature-level
+        DefinedExecutionError. Returns the identifier so the caller can
+        reference it on the command.
+
+        Dedupes by schema title when available, otherwise by HTTP status
+        code. The error definition is appended to the feature root.
+        """
+
+        title = (schema or {}).get("title")
+        if title:
+            ident = self.__normalize_identifier(f"{title}", "Error")
+        else:
+            ident = self.__normalize_identifier(f"Status {code}", "Error")
+
+        if not hasattr(self, "_status_error_idents"):
+            self._status_error_idents: set[str] = set()
+
+        if ident in self._status_error_idents:
+            return ident
+        self._status_error_idents.add(ident)
+
+        err = etree.SubElement(self.__root, "DefinedExecutionError")
+        ident_el = etree.SubElement(err, "Identifier")
+        ident_el.text = ident
+        dn = etree.SubElement(err, "DisplayName")
+        dn.text = title or f"HTTP {code} Error"
+        desc = etree.SubElement(err, "Description")
+        desc.text = f"Error raised when the upstream API returns HTTP {code}."
+        return ident
 
     def __link_data_type_identifier(self, schema: dict, element: etree.Element) -> str:
         """
