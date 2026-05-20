@@ -130,7 +130,8 @@ class FDLGenerator:
         openapi_path: str,
         output_directory: str,
         validate: ValidationLevel | None = None,
-    ) -> None:
+        collect_warnings: bool = False,
+    ) -> list | None:
         """
         Parse the OpenAPI specification and generate SiLA2 FDL XML files for each tag.
         Each feature is written to a separate XML file in the output directory.
@@ -138,6 +139,12 @@ class FDLGenerator:
         Pass `validate` (see `openapi_to_sila2.validation.ValidationLevel`) to run
         XSD and/or sila2-codegen checks immediately after writing. On failure a
         `FdlValidationError` is raised with the precise issue list.
+
+        Pass `collect_warnings=True` to receive a list of
+        `lossy_scan.GenerationWarning` entries describing every OpenAPI
+        construct that will be silently dropped or only partially preserved
+        (oneOf/allOf, formats, SSE content, callbacks, etc.). Returns the
+        list when this flag is set; otherwise returns None.
         """
 
         try:
@@ -191,6 +198,14 @@ class FDLGenerator:
 
             if not result.valid:
                 raise FdlValidationError(result)
+
+        if collect_warnings:
+            # Local import - the scanner is opt-in so we keep it off the hot path.
+            from openapi_to_sila2.lossy_scan import scan_openapi_for_lossy_constructs
+
+            return scan_openapi_for_lossy_constructs(parser.specification)
+
+        return None
 
     def normalize_openapi_specification(self) -> None:
         """

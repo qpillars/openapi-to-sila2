@@ -16,15 +16,22 @@ app = typer.Typer(
 )
 
 
-def _run_fdl_generation(input_file: Path, output_dir: Path) -> None:
+def _run_fdl_generation(input_file: Path, output_dir: Path, collect_warnings: bool = False) -> None:
     """Generate SiLA2 FDL XML files from OpenAPI specification."""
 
     typer.echo(f"📖 Reading OpenAPI specification from: {input_file}")
 
     generator = FDLGenerator()
-    generator.generate_fdl_from_openapi(str(input_file), str(output_dir))
+    warnings = generator.generate_fdl_from_openapi(str(input_file), str(output_dir), collect_warnings=collect_warnings)
 
     typer.echo(f"✅ Successfully generated SiLA2 FDL files in: {output_dir}")
+
+    if collect_warnings:
+        from openapi_to_sila2.lossy_scan import format_warnings_table
+
+        typer.echo("")
+        typer.echo("--- Lossy-construct report ---")
+        typer.echo(format_warnings_table(warnings or []))
 
 
 def _run_codegen(output_dir: Path) -> None:
@@ -135,6 +142,11 @@ def generate(
         "--types",
         help="Also generate Python type classes (requires --codegen)",
     ),
+    warnings: bool = typer.Option(
+        False,
+        "--warnings",
+        help="Scan the spec for lossy constructs (oneOf/allOf/anyOf, formats, SSE, octet-stream, callbacks, ...) and print a report.",
+    ),
 ) -> None:
     """
     Generate SiLA2 Feature Definition Language (FDL) files from an OpenAPI specification.
@@ -147,7 +159,7 @@ def generate(
     try:
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        _run_fdl_generation(input_file, output_dir)
+        _run_fdl_generation(input_file, output_dir, collect_warnings=warnings)
 
         if codegen:
             _run_codegen(output_dir)
