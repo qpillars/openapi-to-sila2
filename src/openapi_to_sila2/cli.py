@@ -1,6 +1,8 @@
 """Command-line interface for openapi-to-sila2."""
 
+import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import typer
@@ -34,10 +36,31 @@ def _run_fdl_generation(input_file: Path, output_dir: Path, collect_warnings: bo
         typer.echo(format_warnings_table(warnings or []))
 
 
+def _resolve_sila2_codegen() -> str:
+    """
+    Find the `sila2-codegen` console script, preferring the venv that's
+    running us. `shutil.which` already consults the current PATH, but on
+    a non-activated venv (e.g. when calling the CLI via its full
+    `.venv/bin/openapi-to-sila2` path) PATH does NOT contain the venv
+    bin directory and the subprocess fails with `command not found`.
+    Resolve via the sibling of `sys.executable` first.
+    """
+
+    sibling = Path(sys.executable).parent / "sila2-codegen"
+    if sibling.exists():
+        return str(sibling)
+    on_path = shutil.which("sila2-codegen")
+    if on_path:
+        return on_path
+    return "sila2-codegen"  # let subprocess raise FileNotFoundError downstream
+
+
 def _run_codegen(output_dir: Path) -> None:
     """Run sila2-codegen on generated FDL files."""
 
     typer.echo("🔧 Running sila2-codegen on generated FDL files...")
+
+    codegen_bin = _resolve_sila2_codegen()
 
     try:
         for feature_file in output_dir.glob("*.xml"):
@@ -45,7 +68,7 @@ def _run_codegen(output_dir: Path) -> None:
 
             result = subprocess.run(
                 [
-                    "sila2-codegen",
+                    codegen_bin,
                     "generate-feature-files",
                     "--overwrite",
                     str(feature_file),
