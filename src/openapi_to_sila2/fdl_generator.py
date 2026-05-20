@@ -96,7 +96,24 @@ class FDLGenerator:
         `FdlValidationError` is raised with the precise issue list.
         """
 
-        parser = ResolvingParser(openapi_path)
+        try:
+            parser = ResolvingParser(openapi_path)
+        except Exception as exc:
+            # prance raises a `RecursionError` (or a "Recursion reached
+            # limit..." message inside a generic exception) when a $ref
+            # chain eats its own tail. The default text is opaque to anyone
+            # who has not lived inside prance. Re-raise with an actionable
+            # hint pointing the user at SiLA 2's actual constraint.
+            msg = str(exc)
+            if "Recursion reached limit" in msg or isinstance(exc, RecursionError):
+                raise ValueError(
+                    f"Recursive schema in {openapi_path}: {msg}. SiLA 2 features "
+                    f"cannot reference themselves directly; flatten the recursion "
+                    f"(e.g. cap children with a sentinel leaf type) or split it "
+                    f"into a separate feature."
+                ) from exc
+            raise
+
         self.specification = parser.specification
         self.normalize_openapi_specification()
 
