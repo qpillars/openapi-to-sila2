@@ -76,6 +76,50 @@ class FDLGenerator:
         ),
     }
 
+    # OpenAPI `format` keyword -> (SiLA Basic, optional Pattern, optional
+    # description). The pattern strings below are deliberately conservative;
+    # they are there to give validators something to bind on, not to be
+    # RFC-perfect. Unknown formats fall through to plain `Basic=String`.
+    _STRING_FORMAT_MAP = {
+        "date": ("Date", None, None),
+        "time": ("Time", None, None),
+        "date-time": ("Timestamp", None, None),
+        "binary": ("Binary", None, "Binary payload."),
+        "byte": ("Binary", None, "Base64-encoded binary payload."),
+        "uuid": (
+            "String",
+            r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+            "UUID (RFC 4122).",
+        ),
+        "email": ("String", r"^[^@\s]+@[^@\s]+\.[^@\s]+$", "Email address."),
+        "uri": ("String", r"^[a-zA-Z][a-zA-Z0-9+\-.]*:.+$", "URI."),
+        "url": ("String", r"^[a-zA-Z][a-zA-Z0-9+\-.]*:.+$", "URL."),
+        "hostname": ("String", r"^[a-zA-Z0-9.\-]+$", "Hostname."),
+        "ipv4": ("String", r"^(\d{1,3}\.){3}\d{1,3}$", "IPv4 address."),
+    }
+
+    def __emit_string_format(self, schema: dict, parent: etree.Element) -> bool:
+        """
+        Emit a typed DataType subtree for a `string` schema when `format` is
+        recognized. Returns True if a subtree was emitted (caller should NOT
+        append the default Basic=String), False otherwise.
+        """
+
+        fmt = schema.get("format")
+        if not fmt or fmt not in self._STRING_FORMAT_MAP:
+            return False
+        sila_type, pattern, _description = self._STRING_FORMAT_MAP[fmt]
+
+        if pattern is None:
+            etree.SubElement(parent, "Basic").text = sila_type
+        else:
+            constrained = etree.SubElement(parent, "Constrained")
+            inner = etree.SubElement(constrained, "DataType")
+            etree.SubElement(inner, "Basic").text = sila_type
+            constraints = etree.SubElement(constrained, "Constraints")
+            etree.SubElement(constraints, "Pattern").text = pattern
+        return True
+
     def __init__(self) -> None:
         self.existing_schemas: dict[str, Any] = {}
         self.common_parameters: list[Any] = []
@@ -762,6 +806,12 @@ class FDLGenerator:
                 etree.SubElement(data_type, "Basic").text = "String"
 
         else:
+            # Typed string formats land first - if `format: date-time` etc. is
+            # present we emit `Basic=Timestamp` (Date/Time/Binary/...) and
+            # return before the generic Basic/Constrained logic below.
+            if schema_type == "string" and self.__emit_string_format(schema, data_type):
+                return data_type
+
             constraints_present = any(
                 key in schema
                 for key in [
