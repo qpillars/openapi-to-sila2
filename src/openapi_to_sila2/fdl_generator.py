@@ -207,7 +207,8 @@ class FDLGenerator:
             # Local import - the scanner is opt-in so we keep it off the hot path.
             from openapi_to_sila2.lossy_scan import scan_openapi_for_lossy_constructs
 
-            return scan_openapi_for_lossy_constructs(parser.specification)
+            spec = parser.specification or {}
+            return scan_openapi_for_lossy_constructs(spec)
 
         return None
 

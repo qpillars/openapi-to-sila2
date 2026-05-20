@@ -47,8 +47,8 @@ def test_helper_ignores_lowercase_tokens():
 
 
 def test_helper_handles_non_string():
-    assert _extract_dep_names_from_string_annotation(None) == set()  # type: ignore[arg-type]
-    assert _extract_dep_names_from_string_annotation(42) == set()  # type: ignore[arg-type]
+    assert _extract_dep_names_from_string_annotation(None) == set()  # ty: ignore[invalid-argument-type]
+    assert _extract_dep_names_from_string_annotation(42) == set()  # ty: ignore[invalid-argument-type]
 
 
 def test_extended_proto_type_mappings():

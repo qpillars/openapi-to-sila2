@@ -10,19 +10,20 @@ import json
 from openapi_to_sila2 import FDLGenerator
 
 
-def _post_with(body_content: dict, response_content: dict | None = None) -> dict:
-    op = {
-        "tags": ["files"],
-        "operationId": "uploadFile",
-        "requestBody": {"content": body_content},
-        "responses": {"200": {"description": "ok"}},
-    }
-    if response_content is not None:
-        op["responses"]["200"]["content"] = response_content
+def _post_with(body_content: dict) -> dict:
     return {
         "openapi": "3.0.3",
         "info": {"title": "files", "version": "1"},
-        "paths": {"/upload": {"post": op}},
+        "paths": {
+            "/upload": {
+                "post": {
+                    "tags": ["files"],
+                    "operationId": "uploadFile",
+                    "requestBody": {"content": body_content},
+                    "responses": {"200": {"description": "ok"}},
+                }
+            }
+        },
     }
 
 

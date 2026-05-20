@@ -4,13 +4,13 @@ field declared in the branches. They now produce a SiLA Structure that
 preserves the branch information.
 """
 
-import lxml.etree as etree
+from lxml import etree  # type: ignore
 
 from openapi_to_sila2 import FDLGenerator
 
 
 def _render(schema: dict) -> str:
-    elem = FDLGenerator()._FDLGenerator__generate_data_type_from_schema(schema)
+    elem = FDLGenerator()._FDLGenerator__generate_data_type_from_schema(schema)  # ty: ignore[unresolved-attribute]
     return etree.tostring(elem, pretty_print=True).decode()
 
 

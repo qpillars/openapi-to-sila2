@@ -63,13 +63,13 @@ def test_numeric_exclusive_passes_through_unchanged(tmp_path):
     a full OpenAPI parse because prance validates the declared OAS version.
     """
 
-    import lxml.etree as etree
+    from lxml import etree  # type: ignore
 
     from openapi_to_sila2.fdl_generator import FDLGenerator
 
     gen = FDLGenerator()
     schema = {"type": "number", "exclusiveMaximum": 150}
-    elem = gen._FDLGenerator__generate_data_type_from_schema(schema)
+    elem = gen._FDLGenerator__generate_data_type_from_schema(schema)  # ty: ignore[unresolved-attribute]
     rendered = etree.tostring(elem, pretty_print=True).decode()
 
     assert "<MaximalExclusive>150</MaximalExclusive>" in rendered
