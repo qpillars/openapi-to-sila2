@@ -374,6 +374,13 @@ class FDLGenerator:
         feature_description = etree.SubElement(self.__root, "Description")
         feature_description.text = tag.get("description", "No description provided.")
 
+        # Feature-level Metadata for header parameters. We collect headers
+        # across all operations of this feature and emit one <Metadata>
+        # element per unique header name at the end of this method, instead
+        # of nesting them under each command's parameter Structure (which
+        # was the wrong fit for SiLA 2 - headers are SiLA Metadata).
+        self.__feature_metadata_headers: dict[str, dict] = {}
+
         feature_execution_error = etree.SubElement(self.__root, "DefinedExecutionError")
         feature_execution_error_identifier = etree.SubElement(feature_execution_error, "Identifier")
         self.common_error_identifier = self.__normalize_identifier(f"{tag.get('name', str(uuid4()))} Error", "Error")
@@ -404,15 +411,41 @@ class FDLGenerator:
                 if tag.get("name") not in tags:
                     continue
 
+                # Header-only GETs still qualify as SiLA Properties because
+                # headers move to feature-level Metadata. Filter `in: header`
+                # params out of the GET-vs-Command discrimination AND collect
+                # them into the feature-level Metadata map up front.
+                non_header_params = [p for p in op.get("parameters", []) if p.get("in") != "header"]
+                non_header_common = [p for p in (self.common_parameters or []) if p.get("in") != "header"]
                 if (
                     method.lower() == "get"
-                    and not op.get("parameters", [])
+                    and not non_header_params
                     and not op.get("security", [])
-                    and not self.common_parameters
+                    and not non_header_common
                 ):
+                    for p in op.get("parameters", []) + list(self.common_parameters or []):
+                        if p.get("in") == "header":
+                            nm = p.get("name")
+                            if nm and nm not in self.__feature_metadata_headers:
+                                self.__feature_metadata_headers[nm] = p.get("schema") or {"type": "string"}
                     self.__generate_property(op, observable)
                 else:
                     self.__generate_command(op, observable)
+
+        # Emit one feature-level <Metadata> per unique header collected
+        # across the operations of this feature.
+        for hdr_name, hdr_schema in self.__feature_metadata_headers.items():
+            meta = etree.SubElement(self.__root, "Metadata")
+            ident = etree.SubElement(meta, "Identifier")
+            ident.text = self.__normalize_identifier(hdr_name, "Metadata")
+            dn = etree.SubElement(meta, "DisplayName")
+            dn.text = hdr_name
+            desc = etree.SubElement(meta, "Description")
+            desc.text = f"Request header `{hdr_name}` (mapped from OpenAPI header parameter)."
+            dt = self.__generate_data_type_from_schema(hdr_schema or {"type": "string"})
+            meta.append(dt)
+            # Per SiLA 2 schema, Metadata may declare DefinedExecutionErrors.
+            self.__link_defined_execution_errors(meta)
 
     def __generate_element(
         self, tag: str, operation: dict, default_suffix: str, observable: bool = False
@@ -649,6 +682,18 @@ class FDLGenerator:
         security_requirements = operation.get("security", [])
         request_body = operation.get("requestBody", {})
 
+        # Pre-extract header params into feature-level Metadata so the
+        # per-command Structure stays focused on path/query/cookie.
+        non_header_params = []
+        for param in parameters:
+            if param.get("in") == "header":
+                name = param.get("name")
+                if name and name not in self.__feature_metadata_headers:
+                    self.__feature_metadata_headers[name] = param.get("schema") or {"type": "string"}
+            else:
+                non_header_params.append(param)
+        parameters = non_header_params
+
         data_type, structure = None, None
 
         generated_command_parameter_id = self.__normalize_identifier(
@@ -778,6 +823,14 @@ class FDLGenerator:
                     data_type_element = etree.SubElement(parameter_element, "DataType")
                     data_type_element_identifier = etree.SubElement(data_type_element, "DataTypeIdentifier")
                     data_type_element_identifier.text = generated_data_type_identifier
+
+            # When ALL params were headers (now feature-level Metadata) and
+            # there is no request body, `data_type` was never created. Emit
+            # an empty Structure so the DataTypeDefinition still satisfies
+            # the SiLA 2 XSD (which requires a DataType child).
+            if data_type is None:
+                data_type = etree.Element("DataType")
+                etree.SubElement(data_type, "Structure")
 
             data_type_definition.append(data_type)
 
