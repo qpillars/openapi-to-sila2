@@ -358,6 +358,19 @@ class FDLGenerator:
                 response_description.text = f"Response containing the {schema.get('title', 'response')}."
 
                 self.__link_data_type_identifier(schema, response_element)
+            elif "application/octet-stream" in content:
+                # Binary response (e.g. image acquisition, file download). Emit
+                # an inline `<Response>Basic=Binary</Response>` so the Command
+                # has a payload at all - previously these silently produced no
+                # Response element.
+                response_element = etree.SubElement(command, "Response")
+                etree.SubElement(response_element, "Identifier").text = "BinaryResponse"
+                etree.SubElement(response_element, "DisplayName").text = "Binary Response"
+                etree.SubElement(
+                    response_element, "Description"
+                ).text = "Raw binary payload (application/octet-stream)."
+                response_data_type = etree.SubElement(response_element, "DataType")
+                etree.SubElement(response_data_type, "Basic").text = "Binary"
 
         self.__link_defined_execution_errors(command)
 
@@ -560,6 +573,14 @@ class FDLGenerator:
                 json_content = content.get("application/json", {})
                 schema = json_content.get("schema", {})
 
+                # Non-JSON request body fallbacks. Real-life specs frequently
+                # hand us multipart/form-data (file uploads), octet-stream
+                # (raw binary), or x-www-form-urlencoded. When no JSON content
+                # is present we synthesize an equivalent schema so the request
+                # parameter structure does not collapse to None and crash lxml.
+                if not schema:
+                    schema = self.__schema_from_non_json_body(content)
+
                 if schema:
                     # Capture the identifier that __link_data_type_identifier
                     # actually registered. Recomputing it here (the old code)
@@ -591,6 +612,41 @@ class FDLGenerator:
         parameter_container_data_type = etree.SubElement(parameter_container, "DataType")
         parameter_container_data_type_identifier = etree.SubElement(parameter_container_data_type, "DataTypeIdentifier")
         parameter_container_data_type_identifier.text = generated_command_parameter_id
+
+    @staticmethod
+    def __schema_from_non_json_body(content: dict) -> dict:
+        """
+        Synthesize a schema-shaped dict from non-JSON request bodies so the
+        rest of the parameter pipeline can keep going. Without this the
+        generator crashed with `Argument 'element' has incorrect type` from
+        lxml when only multipart/form-data, octet-stream, or
+        x-www-form-urlencoded content was declared.
+
+        - `application/octet-stream` -> a single binary string field. The
+          format flows through the format mapper and lands as `Basic=Binary`.
+        - `multipart/form-data` -> the multipart schema as-is (objects with
+          per-part fields, where parts marked `format: binary` will land as
+          `Basic=Binary` once they flow through the format mapper).
+        - `application/x-www-form-urlencoded` -> same shape as multipart.
+        """
+
+        octet = content.get("application/octet-stream", {})
+        if octet:
+            return {
+                "type": "string",
+                "format": "binary",
+                "title": octet.get("schema", {}).get("title", "BinaryBody"),
+            }
+
+        multipart = content.get("multipart/form-data", {})
+        if multipart and multipart.get("schema"):
+            return multipart["schema"]
+
+        form = content.get("application/x-www-form-urlencoded", {})
+        if form and form.get("schema"):
+            return form["schema"]
+
+        return {}
 
     def __generate_parameter_group_element(self, name: str, display_name: str, description: str) -> etree.Element:
         """
