@@ -519,7 +519,11 @@ class FDLGenerator:
             command_parameter_description = etree.SubElement(command_parameter, "Description")
             command_parameter_description.text = "The parameters and payload of the request."
 
-            self.__generate_command_parameters_and_payload_data_type(operation, command_parameter)
+            # Header-only operations have all their params lifted into Metadata, leaving
+            # no command input - a SiLA 2 Command then has no <Parameter> at all.
+            produced_parameter = self.__generate_command_parameters_and_payload_data_type(operation, command_parameter)
+            if not produced_parameter:
+                command.remove(command_parameter)
 
         responses = operation.get("responses", {})
         success_response = next((responses[code] for code in responses if code.startswith("2")), None)
@@ -726,12 +730,16 @@ class FDLGenerator:
 
     def __generate_command_parameters_and_payload_data_type(
         self, operation: dict, parameter_container: etree.Element
-    ) -> None:
+    ) -> bool:
         """
         Generate the SiLA2 data type structure for command and security parameters, request body,
         grouping parameters by location (query, header, path, etc.), where each group is
         represented as a nested structure. Also handle the request body schema if present
         and common parameters for the whole group of commands (paths).
+
+        Returns True if a parameter DataType was produced, False if the operation has no
+        command inputs (header params are still lifted into feature-level Metadata) - in
+        which case the caller must drop the pre-created <Parameter> element.
         """
 
         parameters = list()
@@ -760,6 +768,23 @@ class FDLGenerator:
         generated_command_parameter_id = self.__normalize_identifier(
             f"{operation.get('operationId', str(uuid4()))}Parameters", "Parameters"
         )
+
+        # Resolve the request body schema once (JSON, or a synthesized schema for a
+        # non-JSON body). An empty dict means there is no usable body.
+        request_body_schema: dict = {}
+        if request_body:
+            content = request_body.get("content", {})
+            request_body_schema = content.get("application/json", {}).get("schema", {})
+            if not request_body_schema:
+                request_body_schema = self.__schema_from_non_json_body(content)
+
+        # A SiLA 2 Command with no inputs must omit <Parameter> entirely - an empty
+        # <Structure/> is rejected by the XSD. Once header params are lifted into
+        # feature-level Metadata, an operation can legitimately have nothing left
+        # (e.g. a POST whose only parameter was x-lock-token). Signal the caller to
+        # drop the pre-created <Parameter> element by returning False.
+        if not (parameters or security_requirements or request_body_schema):
+            return False
 
         if generated_command_parameter_id not in self.existing_schemas:
             data_type_definition = etree.SubElement(self.__root, "DataTypeDefinition")
@@ -846,58 +871,41 @@ class FDLGenerator:
                         basic_type = etree.SubElement(parameter_data_type, "Basic")
                         basic_type.text = "String"
 
-            if request_body:
-                content = request_body.get("content", {})
-                json_content = content.get("application/json", {})
-                schema = json_content.get("schema", {})
+            if request_body_schema:
+                # Capture the identifier that __link_data_type_identifier
+                # actually registered. Recomputing it here (the old code)
+                # generated a fresh uuid4 for titleless schemas and
+                # produced a dangling reference.
+                generated_data_type_identifier = self.__link_data_type_identifier(request_body_schema, None)
 
-                # Non-JSON request body fallbacks. Real-life specs frequently
-                # hand us multipart/form-data (file uploads), octet-stream
-                # (raw binary), or x-www-form-urlencoded. When no JSON content
-                # is present we synthesize an equivalent schema so the request
-                # parameter structure does not collapse to None and crash lxml.
-                if not schema:
-                    schema = self.__schema_from_non_json_body(content)
+                if data_type is None:
+                    data_type = etree.SubElement(parameter_container, "DataType")
+                    structure = etree.SubElement(data_type, "Structure")
 
-                if schema:
-                    # Capture the identifier that __link_data_type_identifier
-                    # actually registered. Recomputing it here (the old code)
-                    # generated a fresh uuid4 for titleless schemas and
-                    # produced a dangling reference.
-                    generated_data_type_identifier = self.__link_data_type_identifier(schema, None)
+                parameter_element = etree.SubElement(structure, "Element")
 
-                    if data_type is None:
-                        data_type = etree.SubElement(parameter_container, "DataType")
-                        structure = etree.SubElement(data_type, "Structure")
+                identifier = etree.SubElement(parameter_element, "Identifier")
+                identifier.text = "RequestBody"
 
-                    parameter_element = etree.SubElement(structure, "Element")
+                display_name_element = etree.SubElement(parameter_element, "DisplayName")
+                display_name_element.text = "Request Body"
 
-                    identifier = etree.SubElement(parameter_element, "Identifier")
-                    identifier.text = "RequestBody"
+                description_element = etree.SubElement(parameter_element, "Description")
+                description_element.text = "The body of the request."
 
-                    display_name_element = etree.SubElement(parameter_element, "DisplayName")
-                    display_name_element.text = "Request Body"
+                data_type_element = etree.SubElement(parameter_element, "DataType")
+                data_type_element_identifier = etree.SubElement(data_type_element, "DataTypeIdentifier")
+                data_type_element_identifier.text = generated_data_type_identifier
 
-                    description_element = etree.SubElement(parameter_element, "Description")
-                    description_element.text = "The body of the request."
-
-                    data_type_element = etree.SubElement(parameter_element, "DataType")
-                    data_type_element_identifier = etree.SubElement(data_type_element, "DataTypeIdentifier")
-                    data_type_element_identifier.text = generated_data_type_identifier
-
-            # When ALL params were headers (now feature-level Metadata) and
-            # there is no request body, `data_type` was never created. Emit
-            # an empty Structure so the DataTypeDefinition still satisfies
-            # the SiLA 2 XSD (which requires a DataType child).
-            if data_type is None:
-                data_type = etree.Element("DataType")
-                etree.SubElement(data_type, "Structure")
-
+            # data_type is guaranteed non-None here: the early return above bails out
+            # unless there are params, security, or a request body - each branch
+            # creates the DataType/Structure, so we never emit an empty <Structure/>.
             data_type_definition.append(data_type)
 
         parameter_container_data_type = etree.SubElement(parameter_container, "DataType")
         parameter_container_data_type_identifier = etree.SubElement(parameter_container_data_type, "DataTypeIdentifier")
         parameter_container_data_type_identifier.text = generated_command_parameter_id
+        return True
 
     @staticmethod
     def __schema_from_non_json_body(content: dict) -> dict:

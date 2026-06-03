@@ -9,6 +9,7 @@ header name and exclude headers from the per-command Structure.
 import json
 
 from openapi_to_sila2 import FDLGenerator
+from openapi_to_sila2.validation import ValidationLevel, validate_fdl_dir
 
 
 def test_headers_become_feature_metadata(tmp_path):
@@ -71,3 +72,46 @@ def test_header_only_get_still_a_property(tmp_path):
     assert "<Property>" in fdl
     assert "<Command>" not in fdl
     assert "<Metadata>" in fdl
+
+
+def test_header_only_post_emits_no_empty_structure(tmp_path):
+    """A POST whose only parameter is a header (lifted into Metadata) and which
+    has no body must produce a Command with NO <Parameter> at all - never an
+    empty <Structure/>, which the SiLA 2 XSD rejects.
+
+    Regression: real specs (e.g. LiquidBridge's pickup-tip / drop-tip / unlock,
+    each carrying only an x-lock-token header) used to emit
+    `<DataType><Structure/></DataType>` and fail XSD validation.
+    """
+    spec = {
+        "openapi": "3.0.3",
+        "info": {"title": "robot", "version": "1"},
+        "paths": {
+            "/robot/drop-tip": {
+                "post": {
+                    "tags": ["robot"],
+                    "operationId": "dropTip",
+                    "parameters": [{"in": "header", "name": "x-lock-token", "schema": {"type": "string"}}],
+                    "responses": {"202": {"description": "accepted"}},
+                }
+            }
+        },
+    }
+    (tmp_path / "spec.json").write_text(json.dumps(spec))
+    out = tmp_path / "out"
+    out.mkdir()
+    FDLGenerator().generate_fdl_from_openapi(str(tmp_path / "spec.json"), str(out))
+
+    fdl = (out / "robotFeature.xml").read_text()
+    # The header became feature-level Metadata...
+    assert "<Metadata>" in fdl
+    assert "x-lock-token" in fdl
+    # ...and the parameterless command has neither a <Parameter> nor an empty Structure.
+    assert "<Command>" in fdl
+    assert "<Parameter>" not in fdl
+    assert "<Structure/>" not in fdl
+    assert "<Structure></Structure>" not in fdl
+
+    # And the whole feature passes the official SiLA 2 XSD.
+    result = validate_fdl_dir(out, level=ValidationLevel.XSD)
+    assert result.valid, result.issues
