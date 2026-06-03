@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.4.1] - 2026-06-03
+
+### Fixed
+
+- **Empty `<Structure/>` for parameterless commands.** A POST whose only parameter was a header (lifted into feature-level `<Metadata>` since 0.4.0) and which had no request body emitted `<DataType><Structure/></DataType>` - rejected by the SiLA 2 XSD with `Element 'Structure': Missing child element(s). Expected is ( Element )`. Such an operation now correctly omits `<Parameter>` entirely (a SiLA 2 Command with no inputs is valid); the invalid empty-Structure fallback is gone. Reproduces on the LiquidBridge backend spec (`pickup-tip` / `drop-tip` / `unlock`, each carrying only an `x-lock-token` header) - `generate` then `validate -l full` now passes XSD + sila2-codegen on all features.
+
+### Tests
+
+1 new regression test (`test_header_only_post_emits_no_empty_structure`) asserting no `<Parameter>`, no empty `<Structure/>`, and XSD validity for a header-only POST. Full suite: 71 passing.
+
 ## [0.4.0] - 2026-05-20
 
 This release rebuilds the OpenAPI-to-SiLA-2 generator around the patterns that real laboratory instrument APIs actually use - SSE, long-running 202 + event-stream pairs, error taxonomies, header metadata - plus a long list of defensive fixes for OpenAPI shapes that previously crashed or silently degraded. Grounded in a hands-on coverage matrix run against 20 spec scenarios; every change here has a regression test.
@@ -21,7 +31,6 @@ This release rebuilds the OpenAPI-to-SiLA-2 generator around the patterns that r
 
 ### Fixed
 
-- **Empty `<Structure/>` for parameterless commands.** A POST whose only parameter was a header (now lifted into feature-level `<Metadata>`) and which had no request body emitted `<DataType><Structure/></DataType>` - rejected by the SiLA 2 XSD with `Element 'Structure': Missing child element(s). Expected is ( Element )`. Such an operation now correctly omits `<Parameter>` entirely (a SiLA 2 Command with no inputs is valid); the invalid empty-Structure fallback is gone. Reproduces on LiquidBridge's `pickup-tip` / `drop-tip` / `unlock` operations (each carrying only an `x-lock-token` header).
 - **`exclusiveMinimum: true` / `exclusiveMaximum: true` (OAS 3.0 boolean form).** The generator wrote the literal text `True` into `<MaximalExclusive>`, which sila2-codegen rejected with `Not a decimal value: 'Tru'`. Now the adjacent `maximum`/`minimum` is promoted into the exclusive element and the inclusive emit is skipped. OAS 3.1 numeric form passes through unchanged.
 - **Self-referencing `$ref` chains.** `prance.ResolvingParser` raised the opaque `Recursion reached limit of 1` on schemas like `Folder { children: [Folder] }`. Now re-raises a `ValueError` explaining the SiLA 2 constraint and naming the workarounds (flatten with a sentinel leaf type, or split into a separate feature).
 - **`sila2-codegen` subprocess PATH resolution.** When the CLI is invoked via the venv's absolute path without an activated shell, `PATH` may not contain the venv bin and the codegen subprocess failed with `command not found`. Now resolves via `sys.executable`'s sibling first.
@@ -30,7 +39,7 @@ This release rebuilds the OpenAPI-to-SiLA-2 generator around the patterns that r
 
 ### Tests
 
-13 new regression test files + 43 new tests, covering every patch end-to-end. Full suite: 71 passing.
+13 new regression test files + 42 new tests, covering every patch end-to-end. Full suite: 70 passing.
 
 ## [0.3.1] - 2026-05-18
 
