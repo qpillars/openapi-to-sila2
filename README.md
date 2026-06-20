@@ -23,50 +23,15 @@ This enables:
 
 ### The Workflow
 
-```
-┌─────────────────────┐
-│  OpenAPI Spec       │
-│  (JSON/YAML)        │
-└──────────┬──────────┘
-           │
-    ┌──────▼──────────────────┐
-    │ openapi-to-sila2        │
-    │ FDL Generator           │
-    │                         │
-    │ • Parse OpenAPI         │
-    │ • Map to SiLA2 concepts │
-    │ • Validate against XSD  │
-    └──────┬──────────────────┘
-           │
-    ┌──────▼──────────────────┐
-    │ SiLA2 Feature Defs      │
-    │ (*.xml)                 │
-    └──────┬──────────────────┘
-           │
-    ┌──────▼──────────────────┐
-    │ sila2-codegen           │
-    │ (Official Tool)         │
-    │                         │
-    │ • Generate .proto files │
-    │ • Generate gRPC stubs   │
-    └──────┬──────────────────┘
-           │
-    ┌──────▼──────────────────┐
-    │ openapi-to-sila2        │
-    │ Class Generator         │
-    │                         │
-    │ • Parse .proto files    │
-    │ • Create dataclasses    │
-    │ • Extract custom types  │
-    └──────┬──────────────────┘
-           │
-    ┌──────▼──────────────────┐
-    │ Python Code             │
-    │ • Feature classes       │
-    │ • Custom type classes   │
-    │ • Server/Client stubs   │
-    │ • gRPC services         │
-    └──────────────────────────┘
+```mermaid
+flowchart TD
+    A["OpenAPI Spec<br/>(JSON / YAML)"]
+    B["openapi-to-sila2 · FDL Generator<br/>parse OpenAPI · map to SiLA2 · validate against XSD"]
+    C["SiLA2 Feature Definitions<br/>(*.xml)"]
+    D["sila2-codegen (official tool)<br/>generate .proto files · gRPC stubs"]
+    E["openapi-to-sila2 · Class Generator<br/>parse .proto · create dataclasses · extract custom types"]
+    F["Python Code<br/>feature classes · custom types · server/client stubs · gRPC services"]
+    A --> B --> C --> D --> E --> F
 ```
 
 ---
