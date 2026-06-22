@@ -24,13 +24,26 @@ class ValidationLevel(str, Enum):
     """How thoroughly to validate FDL files. `str` mixin keeps Python 3.10 compatibility."""
 
     XSD = "xsd"
-    """Validate against the official SiLA 2 FeatureDefinition.xsd. Fast (< 50ms)."""
+    """Validate against the official SiLA 2 FeatureDefinition.xsd (structure only). Fast (< 50ms)."""
+
+    SEMANTIC = "semantic"
+    """Stateless cross-reference resolution: every identifier a feature *references* (a command's
+    DefinedExecutionErrors, a DataTypeIdentifier) must be *defined* in the same feature. This is the
+    exact invariant sila2 enforces with "DefinedExecutionError '<X>' is not defined" - the bug class
+    that is XSD-valid but breaks `sila2-codegen new-package`. Pure lxml, no subprocess, and no
+    dependency on sila2's process-global protobuf descriptor pool (which makes repeated in-process
+    `Feature()` calls report false failures), so it is reliable across many features in one run."""
 
     CODEGEN = "codegen"
-    """Round-trip through sila2-codegen. Slower (~1-2s per feature), catches semantic issues XSD does not."""
+    """Round-trip through the `sila2-codegen` subprocess - the authoritative external toolchain.
+    Slower (~1-2s per feature); isolated in its own process so the descriptor-pool issue cannot bite."""
+
+    STRICT = "strict"
+    """XSD + SEMANTIC. Fast, no subprocess, and authoritative for cross-reference resolution - the
+    default for generation self-validation so invalid FDL can never be emitted silently."""
 
     FULL = "full"
-    """Run both XSD and codegen validation."""
+    """Run every check: XSD + SEMANTIC + CODEGEN."""
 
 
 @dataclass(frozen=True)
@@ -67,8 +80,11 @@ def validate_fdl(
 
     issues: list[ValidationIssue] = []
 
-    if level in {ValidationLevel.XSD, ValidationLevel.FULL}:
+    if level in {ValidationLevel.XSD, ValidationLevel.STRICT, ValidationLevel.FULL}:
         issues.extend(_validate_xsd(fdl_path))
+
+    if level in {ValidationLevel.SEMANTIC, ValidationLevel.STRICT, ValidationLevel.FULL}:
+        issues.extend(_validate_semantic(fdl_path))
 
     if level in {ValidationLevel.CODEGEN, ValidationLevel.FULL}:
         issues.extend(_validate_codegen(fdl_path))
@@ -126,6 +142,88 @@ def _validate_xsd(fdl_path: Path) -> Iterable[ValidationIssue]:
             message=error.message,
             line=error.line,
         )
+
+
+# The SiLA 2 default namespace every FDL element lives in.
+_SILA_NS = "http://www.sila-standard.org"
+
+
+def _validate_semantic(fdl_path: Path) -> Iterable[ValidationIssue]:
+    """
+    Resolve every internal identifier reference in the feature, statelessly.
+
+    A SiLA feature is a self-contained document: any identifier it references
+    must be defined within the same feature. Two reference kinds can dangle:
+
+    * ``<DefinedExecutionErrors><Identifier>`` on a command/property/metadata,
+      which must resolve to a feature-level ``<DefinedExecutionError>``.
+    * ``<DataTypeIdentifier>`` anywhere, which must resolve to a feature-level
+      ``<DataTypeDefinition>``.
+
+    A dangling reference is XSD-valid (structure is fine) but is what sila2
+    rejects with "... is not defined" - so we check it here, at generation time,
+    instead of letting it surface downstream in ``sila2-codegen new-package``.
+
+    Pure lxml: no subprocess and, crucially, no in-process ``sila2.framework``
+    parsing - that path registers protobuf messages in a process-global
+    descriptor pool, so validating many features in one run yields false
+    failures. This check only inspects the XML, so it is order-independent.
+    """
+
+    try:
+        tree = etree.parse(str(fdl_path))
+    except etree.XMLSyntaxError as exc:
+        yield ValidationIssue(
+            feature_file=fdl_path.name,
+            level=ValidationLevel.SEMANTIC,
+            message=f"Malformed XML: {exc.msg}",
+            line=exc.lineno,
+        )
+        return
+
+    def _local(el: etree._Element) -> str:
+        return etree.QName(el).localname
+
+    def _child_identifier(el: etree._Element) -> str | None:
+        ident = el.find(f"{{{_SILA_NS}}}Identifier")
+        return ident.text.strip() if ident is not None and ident.text else None
+
+    defined_errors: set[str] = set()
+    defined_types: set[str] = set()
+    error_refs: list[str] = []
+    type_refs: list[str] = []
+
+    for el in tree.getroot().iter():
+        tag = _local(el)
+        if tag == "DefinedExecutionError":  # a definition (singular)
+            if (ident := _child_identifier(el)) is not None:
+                defined_errors.add(ident)
+        elif tag == "DataTypeDefinition":
+            if (ident := _child_identifier(el)) is not None:
+                defined_types.add(ident)
+        elif tag == "DefinedExecutionErrors":  # a reference block (plural)
+            for idn in el.findall(f"{{{_SILA_NS}}}Identifier"):
+                if idn.text:
+                    error_refs.append(idn.text.strip())
+        elif tag == "DataTypeIdentifier":
+            if el.text:
+                type_refs.append(el.text.strip())
+
+    # Report each unresolved identifier once, definitions-first deterministic order.
+    for ref in dict.fromkeys(error_refs):
+        if ref not in defined_errors:
+            yield ValidationIssue(
+                feature_file=fdl_path.name,
+                level=ValidationLevel.SEMANTIC,
+                message=f"DefinedExecutionError '{ref}' is referenced but not defined in this feature.",
+            )
+    for ref in dict.fromkeys(type_refs):
+        if ref not in defined_types:
+            yield ValidationIssue(
+                feature_file=fdl_path.name,
+                level=ValidationLevel.SEMANTIC,
+                message=f"DataType '{ref}' is referenced but not defined in this feature.",
+            )
 
 
 def _validate_codegen(fdl_path: Path) -> Iterable[ValidationIssue]:

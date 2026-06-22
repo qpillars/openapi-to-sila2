@@ -1,4 +1,4 @@
-__version__ = "0.3.0"
+__version__ = "0.4.2"
 
 from openapi_to_sila2.class_generator import Sila2ClassGenerator
 from openapi_to_sila2.fdl_generator import FDLGenerator

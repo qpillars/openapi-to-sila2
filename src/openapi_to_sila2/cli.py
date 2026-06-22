@@ -10,7 +10,12 @@ import typer
 from openapi_to_sila2 import __version__
 from openapi_to_sila2.class_generator import Sila2ClassGenerator
 from openapi_to_sila2.fdl_generator import FDLGenerator
-from openapi_to_sila2.validation import ValidationLevel, validate_fdl, validate_fdl_dir
+from openapi_to_sila2.validation import (
+    FdlValidationError,
+    ValidationLevel,
+    validate_fdl,
+    validate_fdl_dir,
+)
 
 app = typer.Typer(
     name="openapi-to-sila2",
@@ -18,15 +23,24 @@ app = typer.Typer(
 )
 
 
-def _run_fdl_generation(input_file: Path, output_dir: Path, collect_warnings: bool = False) -> None:
+def _run_fdl_generation(
+    input_file: Path,
+    output_dir: Path,
+    collect_warnings: bool = False,
+    validate: ValidationLevel | None = None,
+) -> None:
     """Generate SiLA2 FDL XML files from OpenAPI specification."""
 
     typer.echo(f"📖 Reading OpenAPI specification from: {input_file}")
 
     generator = FDLGenerator()
-    warnings = generator.generate_fdl_from_openapi(str(input_file), str(output_dir), collect_warnings=collect_warnings)
+    warnings = generator.generate_fdl_from_openapi(
+        str(input_file), str(output_dir), validate=validate, collect_warnings=collect_warnings
+    )
 
     typer.echo(f"✅ Successfully generated SiLA2 FDL files in: {output_dir}")
+    if validate is not None:
+        typer.echo(f"✅ Output validated ({validate}) - every feature resolves cleanly")
 
     if collect_warnings:
         from openapi_to_sila2.lossy_scan import format_warnings_table
@@ -173,6 +187,20 @@ def generate(
             "SSE, octet-stream, callbacks, ...) and print a report."
         ),
     ),
+    validate_level: ValidationLevel = typer.Option(
+        ValidationLevel.STRICT,
+        "--validate-level",
+        help=(
+            "Validate the generated FDL before returning and fail if it is invalid. "
+            "'strict' (XSD + authoritative sila2 resolver) is the default so invalid FDL is "
+            "never emitted silently. Use --no-validate to skip."
+        ),
+    ),
+    no_validate: bool = typer.Option(
+        False,
+        "--no-validate",
+        help="Skip output validation (not recommended).",
+    ),
 ) -> None:
     """
     Generate SiLA2 Feature Definition Language (FDL) files from an OpenAPI specification.
@@ -185,7 +213,12 @@ def generate(
     try:
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        _run_fdl_generation(input_file, output_dir, collect_warnings=warnings)
+        _run_fdl_generation(
+            input_file,
+            output_dir,
+            collect_warnings=warnings,
+            validate=None if no_validate else validate_level,
+        )
 
         if codegen:
             _run_codegen(output_dir)
@@ -201,6 +234,10 @@ def generate(
 
     except FileNotFoundError as e:
         typer.echo(f"❌ Error: File not found - {e}", err=True)
+        raise typer.Exit(code=1)
+    except FdlValidationError as e:
+        typer.echo("❌ Generated FDL failed validation - refusing to emit invalid output:", err=True)
+        typer.echo(f"   {e}", err=True)
         raise typer.Exit(code=1)
     except ValueError as e:
         typer.echo(f"❌ Error: Invalid specification - {e}", err=True)
