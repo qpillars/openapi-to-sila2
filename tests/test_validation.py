@@ -124,6 +124,122 @@ def test_fdl_validation_error_carries_result(tmp_path):
     assert "validation failed" in str(err).lower()
 
 
+_DANGLING_ERROR_FDL = """<?xml version='1.0' encoding='UTF-8'?>
+<Feature xmlns="http://www.sila-standard.org" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         SiLA2Version="1.0" FeatureVersion="1.0" Originator="org.silastandard" Category="generator">
+  <Identifier>DanglingFeature</Identifier>
+  <DisplayName>Dangling Feature</DisplayName>
+  <Description>References an error it never defines.</Description>
+  <DefinedExecutionError>
+    <Identifier>DanglingError</Identifier>
+    <DisplayName>Dangling Error</DisplayName>
+    <Description>The only defined error.</Description>
+  </DefinedExecutionError>
+  <Command>
+    <Identifier>DoThing</Identifier>
+    <DisplayName>Do Thing</DisplayName>
+    <Description>Does a thing.</Description>
+    <Observable>No</Observable>
+    <DefinedExecutionErrors>
+      <Identifier>DanglingError</Identifier>
+      <Identifier>HTTPValidationError</Identifier>
+    </DefinedExecutionErrors>
+  </Command>
+</Feature>
+"""
+
+
+def test_semantic_catches_dangling_error_reference(tmp_path):
+    """
+    The core guarantee: a DefinedExecutionErrors reference with no matching
+    definition is structurally XSD-valid but semantically broken. SEMANTIC
+    (the authoritative sila2 resolver) must reject it - this is exactly what
+    sila2-codegen new-package would do downstream.
+    """
+
+    bad = tmp_path / "dangling.xml"
+    bad.write_text(_DANGLING_ERROR_FDL)
+
+    # XSD alone is happy - it only checks structure, not cross-references.
+    assert validate_fdl(bad, level=ValidationLevel.XSD).valid
+
+    result = validate_fdl(bad, level=ValidationLevel.SEMANTIC)
+    assert not result.valid
+    assert any("HTTPValidationError" in issue.message for issue in result.issues)
+    assert any("not defined" in issue.message for issue in result.issues)
+    assert all(issue.level == ValidationLevel.SEMANTIC for issue in result.issues)
+
+
+def test_strict_combines_xsd_and_semantic(tmp_path):
+    """STRICT must catch the dangling reference (via its semantic leg)."""
+
+    bad = tmp_path / "dangling.xml"
+    bad.write_text(_DANGLING_ERROR_FDL)
+
+    result = validate_fdl(bad, level=ValidationLevel.STRICT)
+    assert not result.valid
+    assert any("not defined" in issue.message for issue in result.issues)
+
+
+def test_strict_validation_passes_on_generator_output(generated_fdl_dir):
+    """The generator's own output must pass STRICT (XSD + authoritative resolver)."""
+
+    result = validate_fdl_dir(generated_fdl_dir, level=ValidationLevel.STRICT)
+    assert result.valid, f"Unexpected STRICT issues: {result.issues}"
+
+
+def test_generate_self_validates_at_strict_and_raises_on_dangling(monkeypatch, tmp_path):
+    """
+    Generation with validate=STRICT must raise FdlValidationError if any feature
+    has an unresolved reference - the generator refuses to emit invalid FDL.
+    We force a dangling reference by stubbing the status-error registrar to link
+    an identifier it never defines (the failure mode the real bug produced).
+    """
+
+    import json
+
+    import openapi_to_sila2.fdl_generator as fg
+
+    # A spec with a 400 response guarantees the status-error registrar is invoked.
+    spec = {
+        "openapi": "3.0.3",
+        "info": {"title": "x", "version": "1"},
+        "paths": {
+            "/x/run": {
+                "post": {
+                    "tags": ["x"],
+                    "operationId": "xRun",
+                    "responses": {
+                        "200": {"description": "ok"},
+                        "400": {
+                            "description": "bad",
+                            "content": {"application/json": {"schema": {"type": "object", "title": "BadReq"}}},
+                        },
+                    },
+                }
+            }
+        },
+    }
+    (tmp_path / "spec.json").write_text(json.dumps(spec))
+
+    # Link a phantom error on the command but never emit its definition.
+    monkeypatch.setattr(
+        fg.FDLGenerator,
+        "_FDLGenerator__register_status_error",
+        lambda self, code, schema: "PhantomError",
+        raising=True,
+    )
+
+    with pytest.raises(FdlValidationError) as exc:
+        FDLGenerator().generate_fdl_from_openapi(
+            str(tmp_path / "spec.json"),
+            str(tmp_path / "out"),
+            validate=ValidationLevel.STRICT,
+        )
+
+    assert "not defined" in str(exc.value)
+
+
 def test_untagged_spec_with_validate_produces_valid_fdl(fixtures_path, tmp_path):
     """End-to-end: untagged_simple.json (E01 path) must produce XSD-valid FDL after the bug fix."""
 

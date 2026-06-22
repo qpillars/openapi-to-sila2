@@ -393,6 +393,14 @@ class FDLGenerator:
         feature_execution_error_description = etree.SubElement(feature_execution_error, "Description")
         feature_execution_error_description.text = "Generic error for the feature."
 
+        # Per-feature dedup for status-derived errors (e.g. HTTPValidationError). MUST be reset
+        # for every feature: each feature is its own FDL document and the <DefinedExecutionError>
+        # definitions live in *this* feature's root. A set shared across features would define a
+        # shared status error in only the first feature that needs it and leave every later
+        # feature referencing it without a definition - a dangling reference sila2 rejects with
+        # "DefinedExecutionError '<X>' is not defined".
+        self._status_error_idents: set[str] = set()
+
         self.common_parameters = list()
 
         assert self.specification is not None, "Specification not initialized"
@@ -679,9 +687,8 @@ class FDLGenerator:
         else:
             ident = self.__normalize_identifier(f"Status {code}", "Error")
 
-        if not hasattr(self, "_status_error_idents"):
-            self._status_error_idents: set[str] = set()
-
+        # `_status_error_idents` is initialized (and reset) per feature in
+        # __generate_feature_definition, so the dedup is correctly scoped to this feature's root.
         if ident in self._status_error_idents:
             return ident
         self._status_error_idents.add(ident)
