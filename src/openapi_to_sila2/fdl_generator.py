@@ -1055,6 +1055,22 @@ class FDLGenerator:
         if "oneOf" in schema or "anyOf" in schema:
             branches = schema.get("oneOf") or schema.get("anyOf") or []
             kind = "oneOf" if "oneOf" in schema else "anyOf"
+
+            # Optional[T] / nullable: FastAPI + Pydantic encode an optional or nullable
+            # field as `anyOf: [T, {type: null}]`. SiLA has no null type and no union, so
+            # the generic branch handling below would invent a `Structure{Branch1: T,
+            # Branch2: Any}` - opaque to a human and to an agent. Collapse it to T (the one
+            # meaningful branch) instead; SiLA carries no optionality, so the null branch is
+            # simply dropped. This is the common case and removes the Branch1/Branch2/Any noise.
+            non_null = [
+                branch for branch in branches if not (isinstance(branch, dict) and branch.get("type") == "null")
+            ]
+            if len(non_null) == 1 and len(non_null) < len(branches):
+                collapsed = dict(non_null[0])
+                for key in ("title", "description"):
+                    if schema.get(key) and not collapsed.get(key):
+                        collapsed[key] = schema[key]
+                return self.__generate_data_type_from_schema(collapsed)
             discriminator = (
                 schema.get("discriminator", {}).get("propertyName")
                 if isinstance(schema.get("discriminator"), dict)

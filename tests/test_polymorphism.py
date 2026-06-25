@@ -45,10 +45,27 @@ def test_oneof_emits_structure_with_branches():
 def test_anyof_emits_structure_with_branches():
     schema = {"anyOf": [{"type": "string"}, {"type": "integer"}]}
     rendered = _render(schema)
-    # Untitled branches get Branch1/Branch2 fallbacks
+    # A genuine multi-type union still emits Branch1/Branch2 fallbacks.
     assert "<Identifier>Branch1</Identifier>" in rendered
     assert "<Identifier>Branch2</Identifier>" in rendered
     assert "anyOf alternatives" in rendered
+
+
+def test_nullable_anyof_collapses_to_the_non_null_branch():
+    # FastAPI/Pydantic encode Optional[str] as anyOf:[str, null]. SiLA has no null/union,
+    # so this must collapse to a plain String - NOT a Branch1/Branch2 structure with an Any.
+    schema = {"anyOf": [{"type": "string"}, {"type": "null"}], "title": "Error"}
+    rendered = _render(schema)
+    assert "<Basic>String</Basic>" in rendered
+    assert "Branch" not in rendered
+    assert "<Basic>Any</Basic>" not in rendered
+
+
+def test_nullable_oneof_collapses_too():
+    schema = {"oneOf": [{"type": "integer"}, {"type": "null"}]}
+    rendered = _render(schema)
+    assert "<Basic>Integer</Basic>" in rendered
+    assert "Branch" not in rendered
 
 
 def test_oneof_with_discriminator_records_hint():
