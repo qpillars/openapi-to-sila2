@@ -1,26 +1,26 @@
-# openapi-to-sila2 guidance
+# Contributor guidance
 
 ## Role
 
-`openapi-to-sila2` is QPillars' public open-source conversion engine from OpenAPI specifications to
-SiLA 2 Feature Definition Language and generated proxy scaffolding. It is a credibility and adoption
-asset, and it is the technical foundation used by `sila2-studio`.
+`openapi-to-sila2` converts OpenAPI specifications into SiLA 2 Feature Definition Language and
+generated proxy scaffolding. Keep the library and CLI deterministic, testable, and usable as a
+standalone open-source project.
 
 ## Start here
 
 - `README.md` for public behavior and CLI usage.
 - `docs/` for specifications and decisions.
 - `examples/` for supported workflows.
-- `../engineering-reference/AGENTS.md` for shared engineering guidance.
 
 ## Boundaries
 
 - Preserve a clean library and CLI surface independent of any hosted product.
-- Put reusable conversion logic here, not in `sila2-studio`.
-- Do not introduce product analytics, lead capture, hosting assumptions, or private dependencies.
 - Treat generated FDL, validation fidelity, compatibility, and deterministic output as core quality.
 - Preserve public API and CLI compatibility or document deliberate breaking changes.
-- Keep the repository free of private customer and business information.
+- Keep all instructions, fixtures, examples, issue references, and documentation suitable for public
+  distribution.
+- Do not depend on private repositories, internal paths, unpublished specifications, or confidential
+  data.
 
 ## Working expectations
 
@@ -28,6 +28,7 @@ asset, and it is the technical foundation used by `sila2-studio`.
 - Add regression coverage for mapping defects and edge cases.
 - Be precise about what generated output does and does not provide.
 - Avoid claims of full SiLA 2 support unless the support surface is measured and documented.
+- Never include credentials, customer specifications, private URLs, or internal operational details.
 
 ## Verification
 
