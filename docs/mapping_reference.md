@@ -579,6 +579,13 @@ OpenAPI Schema:
 
 ---
 
+Formats that remain SiLA `String` (`uuid`, `email`, `uri`, `url`, `hostname`,
+and `ipv4`) retain `enum`, `minLength`, and `maxLength` constraints alongside
+their format-derived `Pattern`. This pattern retains precedence over an explicit
+OpenAPI `pattern`, since SiLA permits only one `Pattern` per constrained type.
+Native temporal and binary mappings remain unchanged; their accompanying string
+constraints are not preserved.
+
 ### Numeric Constraints
 
 **Example: tests/fixtures/openapi/test2.json - Temperature Setpoint**
