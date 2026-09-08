@@ -98,28 +98,6 @@ class FDLGenerator:
         "ipv4": ("String", r"^(\d{1,3}\.){3}\d{1,3}$", "IPv4 address."),
     }
 
-    def __emit_string_format(self, schema: dict, parent: etree.Element) -> bool:
-        """
-        Emit a typed DataType subtree for a `string` schema when `format` is
-        recognized. Returns True if a subtree was emitted (caller should NOT
-        append the default Basic=String), False otherwise.
-        """
-
-        fmt = schema.get("format")
-        if not fmt or fmt not in self._STRING_FORMAT_MAP:
-            return False
-        sila_type, pattern, _description = self._STRING_FORMAT_MAP[fmt]
-
-        if pattern is None:
-            etree.SubElement(parent, "Basic").text = sila_type
-        else:
-            constrained = etree.SubElement(parent, "Constrained")
-            inner = etree.SubElement(constrained, "DataType")
-            etree.SubElement(inner, "Basic").text = sila_type
-            constraints = etree.SubElement(constrained, "Constraints")
-            etree.SubElement(constraints, "Pattern").text = pattern
-        return True
-
     def __init__(self) -> None:
         self.existing_schemas: dict[str, Any] = {}
         self.common_parameters: list[Any] = []
@@ -1159,13 +1137,16 @@ class FDLGenerator:
                 etree.SubElement(data_type, "Basic").text = "String"
 
         else:
-            # Typed string formats land first - if `format: date-time` etc. is
-            # present we emit `Basic=Timestamp` (Date/Time/Binary/...) and
-            # return before the generic Basic/Constrained logic below.
-            if schema_type == "string" and self.__emit_string_format(schema, data_type):
-                return data_type
+            format_pattern = None
+            if schema_type == "string" and schema.get("format") in self._STRING_FORMAT_MAP:
+                sila_type, format_pattern, _description = self._STRING_FORMAT_MAP[schema["format"]]
+                if sila_type != "String":
+                    # Preserve native temporal/binary mappings; lexical string
+                    # constraints do not generally carry over to these values.
+                    etree.SubElement(data_type, "Basic").text = sila_type
+                    return data_type
 
-            constraints_present = any(
+            constraints_present = format_pattern is not None or any(
                 key in schema
                 for key in [
                     "enum",
@@ -1195,11 +1176,18 @@ class FDLGenerator:
                         allowed.text = str(value)
 
                 if sila_type == "String":
-                    if "minLength" in schema:
+                    # SiLA's range lengths must be positive; zero minimum is
+                    # a no-op, while zero maximum means exactly empty.
+                    if schema.get("minLength", 0) > 0:
                         etree.SubElement(constraints_element, "MinimalLength").text = str(schema["minLength"])
                     if "maxLength" in schema:
-                        etree.SubElement(constraints_element, "MaximalLength").text = str(schema["maxLength"])
-                    if "pattern" in schema:
+                        length_tag = "Length" if schema["maxLength"] == 0 else "MaximalLength"
+                        etree.SubElement(constraints_element, length_tag).text = str(schema["maxLength"])
+                    if format_pattern is not None:
+                        # SiLA permits only one Pattern. Preserve the existing
+                        # precedence of the format pattern over an explicit one.
+                        etree.SubElement(constraints_element, "Pattern").text = format_pattern
+                    elif "pattern" in schema:
                         etree.SubElement(constraints_element, "Pattern").text = schema["pattern"]
 
                 if sila_type in ("Integer", "Real"):
